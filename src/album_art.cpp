@@ -217,10 +217,10 @@ bool cover_art_exists(const std::string& id)
 		return cached->second;
 	}
 
-	std::string url = get_album_art_url(id);
+	std::string art_url = get_album_art_url(id);
 
 	LOG_DEBUG("Checking cover art existence for ID: " << id 
-			<< " at URL: " << url);
+			<< " at URL: " << art_url);
 
 	CURL* curl = curl_easy_init();
 	if (!curl) {
@@ -228,7 +228,7 @@ bool cover_art_exists(const std::string& id)
 		return false;
 	}
 
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+	curl_easy_setopt(curl, CURLOPT_URL, art_url.c_str());
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPD-Presence");
@@ -253,7 +253,12 @@ std::string get_album_art_url(const std::string& id)
 	return "https://coverartarchive.org/release/" + id + "/front-500";
 }
 
-std::string get_url_search(
+std::string get_release_page_url(const std::string& id)
+{
+	return "https://musicbrainz.org/release/" + id;
+}
+
+AlbumUrls get_album_urls_search(
 		const std::string& artist,
 		const std::string& album,
 		const std::string& date,
@@ -266,12 +271,16 @@ std::string get_url_search(
 
 	LOG_DEBUG("Found " << releases.size() << " releases from MusicBrainz");
 
+	AlbumUrls result = {};
+
 	for (const auto& [id, _] : releases) {
 		LOG_DEBUG("Checking cover art for release ID: " << id);
 		if (cover_art_exists(id)) {
-			std::string url = get_album_art_url(id);
-			LOG_INFO("Found album art URL: " << url);
-			return url;
+			result.cover_url = get_album_art_url(id);
+			result.page_url = get_release_page_url(id);
+			LOG_INFO("Found album art URL: " << result.cover_url);
+			LOG_INFO("Found release page URL: " << result.page_url);
+			return result;
 		}
 	}
 
@@ -279,7 +288,7 @@ std::string get_url_search(
 	return {};
 }
 
-std::string get_url_fingerprint(
+AlbumUrls get_album_urls_fingerprint(
 		int duration,
 		const std::string& fingerprint,
 		const std::string& acoustid_api)
@@ -291,16 +300,19 @@ std::string get_url_fingerprint(
 
 	LOG_DEBUG("Found " << releases.size() << " releases from AcoustID");
 
+	AlbumUrls result = {};
+
 	for (const auto& id : releases) {
 		LOG_DEBUG("Checking cover art for release ID: " << id);
 		if (cover_art_exists(id)) {
-			std::string url = get_album_art_url(id);
-			LOG_INFO("Found album art URL: " << url);
-			return url;
+			result.cover_url = get_album_art_url(id);
+			result.page_url = get_release_page_url(id);
+			LOG_INFO("Found album art URL: " << result.cover_url);
+			LOG_INFO("Found release page URL: " << result.page_url);
+			return result;
 		}
 	}
 
 	LOG_DEBUG("No valid cover art found for fingerprint");
 	return {};
 }
-

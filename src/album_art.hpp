@@ -4,6 +4,23 @@
 #include <vector>
 #include <utility>
 
+// Album Cover + Page url
+struct AlbumUrls {
+	std::string cover_url;
+	std::string page_url;
+};
+
+AlbumUrls get_album_urls_search(
+		const std::string& artist,
+		const std::string& album,
+		const std::string& date,
+		double score);
+
+AlbumUrls get_album_urls_fingerprint(
+		int duration,
+		const std::string& fingerprint,
+		const std::string& acoustid_api);
+
 // MusicBrainz search
 std::vector<std::pair<std::string, double>>
 json_get_release_ids_search(
@@ -22,16 +39,3 @@ json_get_release_ids_fingerprint(
 // Cover Art Archive helpers
 bool cover_art_exists(const std::string& id);
 std::string get_album_art_url(const std::string& id);
-
-// High-level resolvers (BEST single URL)
-std::string get_url_search(
-		const std::string& artist,
-		const std::string& album,
-		const std::string& date,
-		double score);
-
-std::string get_url_fingerprint(
-		int duration,
-		const std::string& fingerprint,
-		const std::string& acoustid_api);
-
