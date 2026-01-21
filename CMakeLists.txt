@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Find MPD client library
 find_package(PkgConfig REQUIRED)
+find_package(CURL REQUIRED)
 pkg_check_modules(MPD REQUIRED libmpdclient)
 
 # Add the discord-presence subdirectory properly
@@ -18,18 +19,21 @@ add_executable(mpdrpc
 	src/rpc.cpp
 	src/mpd.cpp
 	src/config.cpp
+	src/album_art.cpp
 )
 
 # Link with the discord-rpc library
 target_link_libraries(mpdrpc PRIVATE
 	discord-rpc
 	${MPD_LIBRARIES}
+	CURL::libcurl
 )
 
 target_include_directories(mpdrpc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/discord-presence/include
 	 ${CMAKE_CURRENT_SOURCE_DIR}/src
 	 ${MPD_INCLUDE_DIRS}
+	 ${CMAKE_CURRENT_SOURCE_DIR}/lib/json/include
 )
 
 if(UNIX AND NOT APPLE)
