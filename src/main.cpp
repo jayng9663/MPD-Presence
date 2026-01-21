@@ -15,6 +15,8 @@ std::atomic<bool> keepRunning(true);
 // Global verbosity variable
 Verbosity g_verbosity = Verbosity::INFO;
 
+std::vector<std::string> artMethods;
+
 void signalHandler(int signum) {
 	LOG_INFO("Received signal " << signum << ", stopping...");
 	keepRunning = false;
@@ -53,6 +55,27 @@ int main() {
 	LOG_INFO("Set verbosity level to: " << 
 			(g_verbosity == Verbosity::NONE ? "none" : 
 			 (g_verbosity == Verbosity::DEBUG ? "debug" : "info")));
+
+	std::string methodsStr = g_config.getAlbumArtMethodOrder();
+	if (methodsStr.empty()) {
+		methodsStr = "fingerprint,search"; // default fallback
+	}
+
+	std::istringstream iss(methodsStr);
+	std::string method;
+	artMethods.clear();
+
+	while (std::getline(iss, method, ',')) {
+		method.erase(0, method.find_first_not_of(" \t"));
+		method.erase(method.find_last_not_of(" \t") + 1);
+		if (!method.empty()) {
+			artMethods.push_back(method);
+		}
+	}
+
+	if (artMethods.empty()) {
+		artMethods = {"fingerprint", "search"}; // fallback
+	}
 
 	fetchMPDInfo();
 
@@ -117,35 +140,34 @@ int main() {
 
 				// Create a function to handle the album art fetching
 				auto fetchAlbumArt = [title, artist, album, date]() {
-					LOG_DEBUG("Attempting fingerprint-based art lookup");
-					std::string fingerprint = getMPDFingerprint();
-					if (!fingerprint.empty()) {
-						// Call get_url_fingerprint with correct parameters
-						std::string url = get_url_fingerprint(getMPDTotal(), fingerprint, "2jFwlOUpO2");
-						if (!url.empty()) {
-							LOG_INFO("Using Fingerprint method");
-							if (g_verbosity >= Verbosity::DEBUG) {
-								LOG_DEBUG(("URL: " + url).c_str());
+					LOG_DEBUG("Attempting album art lookup");
+
+					for (const auto& method : artMethods) {
+						if (method == "fingerprint") {
+							LOG_DEBUG("Trying fingerprint-based lookup");
+							std::string fingerprint = getMPDFingerprint();
+							if (!fingerprint.empty()) {
+								std::string url = get_url_fingerprint(getMPDTotal(), fingerprint, "2jFwlOUpO2");
+								if (!url.empty()) {
+									LOG_INFO("Using Fingerprint method");
+									return url;
+								}
 							}
-							return url;
+						} else if (method == "search") {
+							LOG_DEBUG("Trying search-based lookup");
+							if (!artist.empty() && artist != "Unknown Artist" &&
+									!album.empty() && album != "Unknown Album" &&
+									!date.empty() && date != "Unknown Date") {
+								std::string url = get_url_search(artist, album, date, 100);
+								if (!url.empty()) {
+									LOG_INFO("Using Search method");
+									return url;
+								}
+							}
 						}
 					}
 
-					if (!artist.empty() && artist != "Unknown Artist" &&
-							!album.empty() && album != "Unknown Album" &&
-							!date.empty() && date != "Unknown Date") {
-						LOG_DEBUG("Attempting search-based art lookup");
-						std::string url = get_url_search(artist, album, date, 100);
-						if (!url.empty()) {
-							LOG_INFO("Using Search method");
-							if (g_verbosity >= Verbosity::DEBUG) {
-								LOG_DEBUG(("URL: " + url).c_str());
-							}
-							return url;
-						}
-					}
-
-					LOG_INFO("No Album found");
+					LOG_INFO("No album art found, defaulting to mpd image");
 					return std::string("mpd");
 				};
 
