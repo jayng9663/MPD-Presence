@@ -39,7 +39,7 @@ bool Config::loadConfig() {
 			// Remove whitespace from key and value
 			key.erase(0, key.find_first_not_of(" \t"));
 			key.erase(key.find_last_not_of(" \t") + 1);
-			
+
 			value.erase(0, value.find_first_not_of(" \t"));
 			value.erase(value.find_last_not_of(" \t") + 1);
 
@@ -90,6 +90,9 @@ std::string Config::getMusicFolder() const {
 }
 
 std::string Config::getVerbose() const {
-    return getValue("verbose");
+	return getValue("verbose");
 }
 
+std::string Config::getAlbumArtMethodOrder() const {
+	return getValue("method_order");
+}
