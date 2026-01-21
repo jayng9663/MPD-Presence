@@ -80,6 +80,7 @@ int main() {
 	fetchMPDInfo();
 
 	rpc_setup();
+	rpc_load_button_settings();
 	rpc_initialize();
 
 	std::string lastTitle = "";
@@ -134,8 +135,17 @@ int main() {
 					LOG_INFO(("Artist: " + artist).c_str());
 					LOG_INFO(("Album: " + album).c_str());
 				}
+
+				std::string cfgLabel = g_config.getButton1Label();
+				std::string cfgUrl = g_config.getButton1Url();
+
+				if (!cfgLabel.empty() && !cfgUrl.empty()) {
+					rpc_set_button1(cfgLabel, cfgUrl);
+				}
+
 				rpc_set_details(title.c_str());
 				rpc_set_state(artist.c_str());
+				rpc_set_largeimage("mpd");
 				rpc_set_largeimagetext(album.c_str());
 
 				// Set default image first (mpd)
@@ -150,10 +160,10 @@ int main() {
 							LOG_DEBUG("Trying fingerprint-based lookup");
 							std::string fingerprint = getMPDFingerprint();
 							if (!fingerprint.empty()) {
-								std::string url = get_url_fingerprint(getMPDTotal(), fingerprint, "2jFwlOUpO2");
-								if (!url.empty()) {
+								auto urls = get_album_urls_fingerprint(getMPDTotal(), fingerprint, "2jFwlOUpO2");
+								if (!urls.cover_url.empty()) {
 									LOG_INFO("Using Fingerprint method");
-									return url;
+									return urls;
 								}
 							}
 						} else if (method == "search") {
@@ -161,29 +171,41 @@ int main() {
 							if (!artist.empty() && artist != "Unknown Artist" &&
 									!album.empty() && album != "Unknown Album" &&
 									!date.empty() && date != "Unknown Date") {
-								std::string url = get_url_search(artist, album, date, 100);
-								if (!url.empty()) {
+								auto urls = get_album_urls_search(artist, album, date, 100);
+								if (!urls.cover_url.empty()) {
 									LOG_INFO("Using Search method");
-									return url;
+									return urls; 
 								}
 							}
 						}
 					}
 
 					LOG_INFO("No album art found, defaulting to mpd image");
-					return std::string("mpd");
+					return AlbumUrls{"mpd", ""};
 				};
 
 				// Run the async operation in background
 				std::thread([fetchAlbumArt]() {
-						std::string url = fetchAlbumArt();
-						if (!url.empty()) {
-						// Update RPC with actual image after a short delay to ensure it's ready
-						std::this_thread::sleep_for(std::chrono::milliseconds(100));
-						rpc_set_largeimage(url.c_str());
-						rpc_update_presence();
+						try {
+							auto urls = fetchAlbumArt();
+
+							if (!urls.cover_url.empty()) {
+								std::this_thread::sleep_for(std::chrono::milliseconds(100));
+								rpc_set_largeimage(urls.cover_url.c_str());
+							}
+
+							std::string cfgLabel = g_config.getButton1Label();
+							std::string cfgUrl = g_config.getButton1Url();
+
+							if (!urls.page_url.empty() && !cfgLabel.empty() && !cfgUrl.empty()) {
+								rpc_set_button1("View Album", urls.page_url.c_str());
+							}
+
+							rpc_update_presence();
+						} catch (const std::exception& e) {
+							LOG_ERROR("Error in album art thread: " << e.what());
 						}
-						}).detach();
+					}).detach();
 
 				needsUpdate = true;
 				lastTitle = title;
