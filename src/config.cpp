@@ -30,7 +30,7 @@ bool Config::loadConfig() {
 			continue;
 		}
 
-		// Parse key-value pairs
+		// Parse key-value pairs - handle inline comments
 		size_t pos = line.find('=');
 		if (pos != std::string::npos) {
 			std::string key = line.substr(0, pos);
@@ -39,8 +39,15 @@ bool Config::loadConfig() {
 			// Remove whitespace from key and value
 			key.erase(0, key.find_first_not_of(" \t"));
 			key.erase(key.find_last_not_of(" \t") + 1);
+			
 			value.erase(0, value.find_first_not_of(" \t"));
 			value.erase(value.find_last_not_of(" \t") + 1);
+
+			// Remove inline comments (text after #)
+			size_t commentPos = value.find('#');
+			if (commentPos != std::string::npos) {
+				value.erase(commentPos);
+			}
 
 			// Remove surrounding quotes
 			if ((value.front() == '"' || value.front() == '\'') &&
@@ -80,5 +87,9 @@ std::string Config::getPassword() const {
 
 std::string Config::getMusicFolder() const {
 	return getValue("music_folder");
+}
+
+std::string Config::getVerbose() const {
+    return getValue("verbose");
 }
 

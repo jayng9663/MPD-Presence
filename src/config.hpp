@@ -16,6 +16,7 @@ public:
     int getPort() const;
     std::string getPassword() const;
     std::string getMusicFolder() const;
+	 std::string getVerbose() const;
 };
 
 extern Config g_config;
