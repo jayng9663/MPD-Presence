@@ -96,3 +96,19 @@ std::string Config::getVerbose() const {
 std::string Config::getAlbumArtMethodOrder() const {
 	return getValue("method_order");
 }
+
+std::string Config::getButton1Label() const {
+	return getValue("Button1Label");
+}
+
+std::string Config::getButton1Url() const {
+	return getValue("Button1Url");
+}
+
+std::string Config::getButton2Label() const {
+	return getValue("Button2Label");
+}
+
+std::string Config::getButton2Url() const {
+	return getValue("Button2Url");
+}
