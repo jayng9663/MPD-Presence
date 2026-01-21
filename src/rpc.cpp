@@ -4,6 +4,7 @@
 #include <string>
 #include <mutex>
 #include "logging.hpp"
+#include "config.hpp"
 
 constexpr auto APPLICATION_ID = "1343479020918014013";
 
@@ -15,6 +16,12 @@ static std::string currentDetails;
 static std::string currentState;
 static std::string currentImageText;
 static std::string LargeImageKey = "mpd";
+
+// Configurable button settings
+static std::string Button1Label;
+static std::string Button1Url;
+static std::string Button2Label;
+static std::string Button2Url;
 
 // Thread-safe access to RPC variables
 static std::mutex rpcMutex;
@@ -47,7 +54,7 @@ static void updatePresence() {
 		return;
 	}
 
-	rpc.getPresence()
+	auto& presence = rpc.getPresence()
 		.setDetails(currentDetails)
 		.setState(currentState)
 		.setLargeImageText(currentImageText)
@@ -55,10 +62,17 @@ static void updatePresence() {
 		.setStatusDisplayType(discord::StatusDisplayType::Details)
 		.setLargeImageKey(LargeImageKey)
 		.setStartTimestamp(StartTime)
-		.setEndTimestamp(EndTime)
-		.setButton1("My ListenBrainz Profile", "https://listenbrainz.org/user/omega101/")
-		.setButton2("Create by Jayng9663 Write in C++", "https://github.com/jayng9663/")
-		.refresh();
+		.setEndTimestamp(EndTime);
+
+	if (!Button1Label.empty() && !Button1Url.empty()) {
+		presence.setButton1(Button1Label, Button1Url);
+	}
+
+	if (!Button2Label.empty() && !Button2Url.empty()) {
+		presence.setButton2(Button2Label, Button2Url);
+	}
+
+	presence.refresh();
 }
 
 void rpc_setup() {
@@ -104,6 +118,7 @@ void rpc_set_state(const char* state) {
 	currentState = state;
 	LOG_DEBUG("Set state to: " << state);
 }
+
 void rpc_set_largeimagetext(const char* imagetext)
 {
 	std::lock_guard<std::mutex> lock(rpcMutex);
@@ -138,3 +153,39 @@ std::string rpc_get_largeimage() {
 	return LargeImageKey;
 }
 
+void rpc_set_button1(const std::string& label, const std::string& url) {
+	std::lock_guard<std::mutex> lock(rpcMutex);
+	Button1Label = label;
+	Button1Url = url;
+	LOG_DEBUG("Set button1 to: " << label << " (" << url << ")");
+}
+
+void rpc_set_button2(const std::string& label, const std::string& url) {
+	std::lock_guard<std::mutex> lock(rpcMutex);
+	Button2Label = label;
+	Button2Url = url;
+	LOG_DEBUG("Set button2 to: " << label << " (" << url << ")");
+}
+
+void rpc_load_button_settings() {
+	std::string configButton1Label = g_config.getButton1Label();
+	std::string configButton1Url = g_config.getButton1Url();
+	std::string configButton2Label = g_config.getButton2Label();
+	std::string configButton2Url = g_config.getButton2Url();
+
+	if (!configButton1Label.empty()) {
+		Button1Label = configButton1Label;
+	}
+	if (!configButton1Url.empty()) {
+		Button1Url = configButton1Url;
+	}
+	if (!configButton2Label.empty()) {
+		Button2Label = configButton2Label;
+	}
+	if (!configButton2Url.empty()) {
+		Button2Url = configButton2Url;
+	}
+
+	LOG_DEBUG("Loaded button settings - Button1: '" << Button1Label << "' '" << Button1Url << "'");
+	LOG_DEBUG("Loaded button settings - Button2: '" << Button2Label << "' '" << Button2Url << "'");
+}

@@ -17,3 +17,7 @@ void rpc_set_largeimagetext(const char* imagetext);
 void rpc_set_starttime(int64_t starttime);
 void rpc_set_endtime(int64_t endtime);
 void rpc_set_largeimage(const std::string& url);
+
+void rpc_load_button_settings();
+void rpc_set_button1(const std::string& label, const std::string& url);
+void rpc_set_button2(const std::string& label, const std::string& url);
