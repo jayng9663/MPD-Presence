@@ -13,6 +13,7 @@ static int64_t EndTime   = 0;
 static bool SendPresence = true;
 static std::string currentDetails;
 static std::string currentState;
+static std::string currentImageText;
 static std::string LargeImageKey = "mpd";
 
 // Thread-safe access to RPC variables
@@ -49,6 +50,7 @@ static void updatePresence() {
 	rpc.getPresence()
 		.setDetails(currentDetails)
 		.setState(currentState)
+		.setLargeImageText(currentImageText)
 		.setActivityType(discord::ActivityType::Listening)
 		.setStatusDisplayType(discord::StatusDisplayType::Details)
 		.setLargeImageKey(LargeImageKey)
@@ -102,6 +104,12 @@ void rpc_set_state(const char* state) {
 	currentState = state;
 	LOG_DEBUG("Set state to: " << state);
 }
+void rpc_set_largeimagetext(const char* imagetext)
+{
+	std::lock_guard<std::mutex> lock(rpcMutex);
+	currentImageText = imagetext;
+	LOG_DEBUG("set image text to: " << imagetext);
+}
 
 void rpc_set_largeimage(const std::string& url)
 {
@@ -118,6 +126,11 @@ std::string rpc_get_details() {
 std::string rpc_get_state() {
 	std::lock_guard<std::mutex> lock(rpcMutex);
 	return currentState;
+}
+
+std::string rpc_get_largeimagetext() {
+	std::lock_guard<std::mutex> lock(rpcMutex);
+	return currentImageText;
 }
 
 std::string rpc_get_largeimage() {
