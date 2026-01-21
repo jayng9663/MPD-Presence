@@ -56,8 +56,8 @@ static void updatePresence() {
 		.setLargeImageKey(LargeImageKey)
 		.setStartTimestamp(StartTime)
 		.setEndTimestamp(EndTime)
-		.setButton1("ListenBrainz", "https://listenbrainz.org/user/omega101/")
-		.setButton2("Create by Jayng9663", "https://github.com/jayng9663/")
+		.setButton1("My ListenBrainz Profile", "https://listenbrainz.org/user/omega101/")
+		.setButton2("Create by Jayng9663 Write in C++", "https://github.com/jayng9663/")
 		.refresh();
 }
 

@@ -9,7 +9,7 @@ class Config {
 		std::map<std::string, std::string> settings;
 
 	public:
-		Config(const std::string& filePath = "mpdrpc.conf");
+		Config(const std::string& filePath);
 		bool loadConfig();
 		std::string getValue(const std::string& key) const;
 		std::string getHost() const;

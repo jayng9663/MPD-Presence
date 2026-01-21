@@ -55,7 +55,7 @@ namespace {
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "mpdrpc/1.0");
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPD-Presence");
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L); // Faster timeout
 
@@ -231,7 +231,7 @@ bool cover_art_exists(const std::string& id)
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPDRPC");
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPD-Presence");
 
 	CURLcode res = curl_easy_perform(curl);
 	long code = 0;

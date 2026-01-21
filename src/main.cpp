@@ -22,7 +22,7 @@ void signalHandler(int signum) {
 	keepRunning = false;
 }
 
-Config g_config("mpdrpc.conf");
+Config g_config("MPD-Presence.conf");
 
 int main() {
 	std::signal(SIGINT, signalHandler); // Ctrl+C
