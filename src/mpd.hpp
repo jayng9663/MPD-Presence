@@ -8,6 +8,7 @@ struct MPDState {
 	std::string title;
 	std::string artist;
 	std::string album;
+	std::string date;
 	std::string filePath;
 	std::string fingerprint;
 
@@ -19,12 +20,13 @@ struct MPDState {
 void fetchMPDInfo();
 
 // MPD getters
-bool mpdIsValid();
-bool mpdIsPaused();
+bool getMPDIsValid();
+bool getMPDIsPaused();
 
 std::string getMPDTitle();
 std::string getMPDArtist();
 std::string getMPDAlbum();
+std::string getMPDDate();
 std::string getMPDFilePath();
 std::string getMPDFingerprint();
 
