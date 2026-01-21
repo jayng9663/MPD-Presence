@@ -117,6 +117,7 @@ int main() {
 				LOG_INFO("Entering idle state");
 				rpc_set_details("MPD RPC");
 				rpc_set_state("");
+				rpc_set_largeimagetext("");
 				rpc_set_largeimage("mpd");
 				rpc_set_starttime(0);
 				rpc_set_endtime(0);
@@ -130,10 +131,12 @@ int main() {
 				LOG_INFO("Changing song");
 				if (g_verbosity >= Verbosity::DEBUG) {
 					LOG_INFO(("Title: " + title).c_str());
+					LOG_INFO(("Artist: " + artist).c_str());
 					LOG_INFO(("Album: " + album).c_str());
 				}
 				rpc_set_details(title.c_str());
-				rpc_set_state(album.c_str());
+				rpc_set_state(artist.c_str());
+				rpc_set_largeimagetext(album.c_str());
 
 				// Set default image first (mpd)
 				rpc_update_presence();
