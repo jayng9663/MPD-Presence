@@ -2,6 +2,10 @@
 
 A Discord Rich Presence client for [MPD](https://www.musicpd.org/) (Music Player Daemon). Automatically displays your currently playing track on your Discord profile, complete with album art fetched from MusicBrainz / Cover Art Archive.
 
+| Voice channel | User activity |
+|:---:|:---:|
+| ![Voice channel presence with cover](docs/voice_channel.png) | ![User activity with cover](docs/activity.png) |
+
 ---
 
 ## Features
