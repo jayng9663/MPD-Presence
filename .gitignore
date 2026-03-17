@@ -64,3 +64,4 @@ gmon.out
 .cache/
 .clangd/
 
+old/
