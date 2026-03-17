@@ -89,7 +89,7 @@ Button2Url   =
 | Library | Purpose |
 |---|---|
 | [libmpdclient](https://www.musicpd.org/libs/libmpdclient/) | MPD communication + Chromaprint fingerprinting |
-| [discord-rpc](https://github.com/discord/discord-rpc) | Discord Rich Presence |
+| [discord-presence](https://github.com/EclipseMenu/discord-presence) | Discord Rich Presence (Modern C++ rewrite) |
 | [libcurl](https://curl.se/libcurl/) | HTTP requests (MusicBrainz, AcoustID, Cover Art Archive) |
 | [nlohmann/json](https://github.com/nlohmann/json) | JSON parsing |
 
