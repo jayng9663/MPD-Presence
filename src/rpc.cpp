@@ -121,6 +121,13 @@ void rpc_set_current_song(int songID,
 	LOG_DEBUG("rpc_set_current_song: id=" << songID << " details=" << details);
 }
 
+void rpc_clear_presence() {
+	std::lock_guard<std::mutex> lock(rpcMutex);
+	discord::RPCManager::get().clearPresence();
+	g_pendingUpdate = false;
+	LOG_DEBUG("Discord presence cleared");
+}
+
 void rpc_update_presence() {
 	std::lock_guard<std::mutex> lock(rpcMutex);
 	LOG_DEBUG("Updating Discord presence");

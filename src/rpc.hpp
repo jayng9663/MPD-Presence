@@ -30,6 +30,9 @@ void rpc_load_button_settings();
 void rpc_set_button1(const std::string& label, const std::string& url);
 void rpc_set_button2(const std::string& label, const std::string& url);
 
+// Clear Discord presence entirely (shows nothing in Discord)
+void rpc_clear_presence();
+
 // Retry a previously rate-limited update if the window has passed.
 // Pass fresh timestamps so the timer stays accurate. Returns true if flushed.
 bool rpc_flush_if_pending(int64_t newStartTime, int64_t newEndTime);
