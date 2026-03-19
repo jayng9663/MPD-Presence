@@ -84,7 +84,9 @@ int main() {
 		const int64_t     elapsed = getMPDElapsed();
 		const int64_t     total   = getMPDTotal();
 
-		const bool isIdle = !getMPDIsValid();
+		const bool isIdle = !getMPDIsValid()
+			|| title  == "Unknown Title"
+			|| artist == "Unknown Artist";
 
 		const bool trackChanged      = (songID != lastSongID);
 		const bool pauseStateChanged = (paused != lastPaused);
@@ -99,14 +101,9 @@ int main() {
 
 		if (isIdle) {
 			if (idleStateChanged) {
-				LOG_INFO("Entering idle state");
-				rpc_set_details("MPD RPC");
-				rpc_set_state("");
-				rpc_set_largeimagetext("");
-				rpc_set_largeimage("mpd");
-				rpc_set_starttime(0);
-				rpc_set_endtime(0);
-				needsUpdate   = true;
+				LOG_INFO("Entering idle state - clearing Discord presence");
+				rpc_clear_presence();
+				needsUpdate   = false;
 				lastWasIdle   = true;
 				lastSongID    = -1;
 			}
@@ -149,15 +146,12 @@ int main() {
 					}
 				}
 
-				// Determine button: config takes priority, then album page
+				// When playing, show "View Album" only if config Button1 is set and art was found
 				std::string btnLabel, btnUrl;
 				{
 					std::string cfgLabel = g_config.getButton1Label();
 					std::string cfgUrl   = g_config.getButton1Url();
-					if (!cfgLabel.empty() && !cfgUrl.empty()) {
-						btnLabel = cfgLabel;
-						btnUrl   = cfgUrl;
-					} else if (!urls.page_url.empty()) {
+					if (!cfgLabel.empty() && !cfgUrl.empty() && !urls.page_url.empty()) {
 						btnLabel = "View Album";
 						btnUrl   = urls.page_url;
 					}
