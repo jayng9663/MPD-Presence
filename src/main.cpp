@@ -10,11 +10,9 @@
 #include "rpc.hpp"
 #include "mpd.hpp"
 #include "album_art.hpp"
-#include "logging.hpp"
+#include "logger.hpp"
 
 std::atomic<bool> keepRunning(true);
-
-Verbosity g_verbosity = Verbosity::INFO;
 
 std::vector<std::string> artMethods;
 
@@ -25,25 +23,31 @@ void signalHandler(int signum) {
 
 Config g_config("MPD-Presence.conf");
 
-int main() {
+int main(int argc, char* argv[]) {
 	std::signal(SIGINT,  signalHandler);
 	std::signal(SIGTERM, signalHandler);
 
-	if (!g_config.loadConfig()) {
-		LOG_ERROR("Failed to load configuration file");
-		return 1;
+	bool verbose = false;
+	for (int i = 1; i < argc; ++i) {
+		std::string arg = argv[i];
+		if (arg == "--verbose" || arg == "-v")   verbose = true;
+		else if (arg == "--help" || arg == "-h") {
+			std::cout <<
+				"Usage: MPD-Presence [OPTIONS]\n\n"
+				"Options:\n"
+				"  -v, --verbose  Enable DEBUG-level logging\n"
+				"  -h, --help     Show this message\n\n";
+			return 0;
+		}
 	}
 
 	// Verbosity
-	std::string verboseStr = g_config.getVerbose();
-	verboseStr.erase(0, verboseStr.find_first_not_of(" \t"));
-	verboseStr.erase(verboseStr.find_last_not_of(" \t") + 1);
+	if (verbose) Logger::get().setLevel(LogLevel::DEBUG);
 
-	if (verboseStr == "none")        g_verbosity = Verbosity::NONE;
-	else if (verboseStr == "debug")  g_verbosity = Verbosity::DEBUG;
-	else                             g_verbosity = Verbosity::INFO;
-
-	LOG_INFO("Verbosity: " << verboseStr);
+	if (!g_config.loadConfig()) {
+		LOG_ERR("Failed to load configuration file");
+		return 1;
+	}
 
 	// Album art method order
 	std::string methodsStr = g_config.getAlbumArtMethodOrder();
@@ -86,7 +90,17 @@ int main() {
 
 		const bool isIdle = !getMPDIsValid()
 			|| title  == "Unknown Title"
-			|| artist == "Unknown Artist";
+			|| artist == "Unknown Artist"
+			|| [&]() {
+				const std::string& fp = getMPDFilePath();
+				const std::string& mf = g_config.getMusicFolder();
+				for (const auto& p : g_config.getIgnoreList()) {
+					// Strip leading slash so "/AMSR" matches "music_folder/AMSR/..."
+					const std::string rel = (!p.empty() && p[0] == '/') ? p.substr(1) : p;
+					if (fp.find(mf + rel) == 0) return true;
+				}
+				return false;
+			}();
 
 		const bool trackChanged      = (songID != lastSongID);
 		const bool pauseStateChanged = (paused != lastPaused);
@@ -101,9 +115,9 @@ int main() {
 
 		if (isIdle) {
 			if (idleStateChanged) {
-				LOG_INFO("Entering idle state - clearing Discord presence");
+				LOG_INFO("Entering idle state — clearing Discord presence");
 				rpc_clear_presence();
-				needsUpdate   = false;
+				needsUpdate   = false; // clear already sent, no further push needed
 				lastWasIdle   = true;
 				lastSongID    = -1;
 			}

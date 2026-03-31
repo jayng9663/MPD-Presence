@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <mutex>
-#include "logging.hpp"
+#include "logger.hpp"
 #include "config.hpp"
 
 constexpr auto APPLICATION_ID = "1343479020918014013";
@@ -34,7 +34,7 @@ static void discordSetup() {
 			LOG_INFO("Discord: disconnected (" << errcode << ") - " << message);
 			})
 	.onErrored([](int errcode, std::string_view message) {
-			LOG_ERROR("Discord: error (" << errcode << ") - " << message);
+			LOG_ERR("Discord: error (" << errcode << ") - " << message);
 			});
 }
 

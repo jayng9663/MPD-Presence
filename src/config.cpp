@@ -1,6 +1,7 @@
 #include "config.hpp"
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 Config::Config(const std::string& filePath) : configFilePath(filePath) {}
 
@@ -89,10 +90,6 @@ std::string Config::getMusicFolder() const {
 	return getValue("music_folder");
 }
 
-std::string Config::getVerbose() const {
-	return getValue("verbose");
-}
-
 std::string Config::getAlbumArtMethodOrder() const {
 	return getValue("method_order");
 }
@@ -111,4 +108,18 @@ std::string Config::getButton2Label() const {
 
 std::string Config::getButton2Url() const {
 	return getValue("Button2Url");
+}
+
+std::vector<std::string> Config::getIgnoreList() const {
+	std::vector<std::string> paths;
+	std::istringstream iss(getValue("ignore"));
+	std::string token;
+	while (std::getline(iss, token, ',')) {
+		// Trim whitespace
+		token.erase(0, token.find_first_not_of(" \t\"'"));
+		token.erase(token.find_last_not_of(" \t\"'") + 1);
+		if (!token.empty())
+			paths.push_back(token);
+	}
+	return paths;
 }

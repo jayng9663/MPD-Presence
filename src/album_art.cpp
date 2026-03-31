@@ -8,7 +8,7 @@
 #include <cctype>
 #include <unordered_map>
 #include <string>
-#include "logging.hpp"
+#include "logger.hpp"
 
 namespace {
 
@@ -63,7 +63,7 @@ namespace {
 
 		CURLcode res = curl_easy_perform(curl);
 		if (res != CURLE_OK) {
-			LOG_ERROR("cURL request failed for URL: " << url 
+			LOG_ERR("cURL request failed for URL: " << url 
 					<< " - Error: " << curl_easy_strerror(res));
 			return {};
 		}
@@ -108,7 +108,7 @@ std::vector<std::pair<std::string, double>> json_get_release_ids_search(
 
 	std::string response = get_response(url);
 	if (response.empty()) {
-		LOG_ERROR("Empty response from MusicBrainz for: " << url);
+		LOG_ERR("Empty response from MusicBrainz for: " << url);
 		return {};
 	}
 
@@ -145,7 +145,7 @@ std::vector<std::pair<std::string, double>> json_get_release_ids_search(
 		}
 
 	} catch (const std::exception& e) {
-		LOG_ERROR("JSON parsing error: " << e.what());
+		LOG_ERR("JSON parsing error: " << e.what());
 	}
 
 	// Cache result
@@ -165,7 +165,7 @@ std::vector<std::string> json_get_release_ids_fingerprint(
 
 	std::string response = get_response(url);
 	if (response.empty()) {
-		LOG_ERROR("Empty response from AcoustID for: " << url);
+		LOG_ERR("Empty response from AcoustID for: " << url);
 		return {};
 	}
 
@@ -200,7 +200,7 @@ std::vector<std::string> json_get_release_ids_fingerprint(
 		}
 
 	} catch (const std::exception& e) {
-		LOG_ERROR("JSON parsing error in AcoustID: " << e.what());
+		LOG_ERR("JSON parsing error in AcoustID: " << e.what());
 	}
 
 	return releaseIds;

@@ -7,7 +7,7 @@
 
 #include "mpd.hpp"
 #include "config.hpp"
-#include "logging.hpp"
+#include "logger.hpp"
 
 static MPDState g_mpd;
 
@@ -36,7 +36,7 @@ static bool ensureConnected() {
 			);
 
 	if (!g_conn || mpd_connection_get_error(g_conn) != MPD_ERROR_SUCCESS) {
-		LOG_ERROR("MPD connection failed (" << retryCount << "/" << maxRetries << ")");
+		LOG_ERR("MPD connection failed (" << retryCount << "/" << maxRetries << ")");
 		if (g_conn) {
 			mpd_connection_free(g_conn);
 			g_conn = nullptr;
@@ -45,7 +45,7 @@ static bool ensureConnected() {
 
 		retryCount++;
 		if (retryCount >= maxRetries) {
-			LOG_ERROR("Max retries reached. Sending quit signal.");
+			LOG_ERR("Max retries reached. Sending quit signal.");
 			std::raise(SIGTERM);
 		}
 		return false;
@@ -55,7 +55,7 @@ static bool ensureConnected() {
 
 	if (!g_config.getPassword().empty()) {
 		if (!mpd_run_password(g_conn, g_config.getPassword().c_str())) {
-			LOG_ERROR("MPD authentication failed");
+			LOG_ERR("MPD authentication failed");
 			mpd_connection_free(g_conn);
 			g_conn = nullptr;
 			return false;
@@ -68,14 +68,14 @@ static bool ensureConnected() {
 
 void fetchMPDInfo() {
 	if (!ensureConnected()) {
-		LOG_ERROR("Failed to connect to MPD.");
+		LOG_ERR("Failed to connect to MPD.");
 		g_mpd = {};
 		return;
 	}
 
 	mpd_status* status = mpd_run_status(g_conn);
 	if (!status) {
-		LOG_ERROR("Failed to get MPD status -- dropping connection");
+		LOG_ERR("Failed to get MPD status -- dropping connection");
 		mpd_connection_free(g_conn);
 		g_conn = nullptr;
 		g_mpd = {};
@@ -126,7 +126,7 @@ void fetchMPDInfo() {
 						buffer.resize(bufsize);
 					} else {
 						g_mpd.fingerprint.clear();
-						LOG_ERROR("Error getting fingerprint");
+						LOG_ERR("Error getting fingerprint");
 						break;
 					}
 				}
