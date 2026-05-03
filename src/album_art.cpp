@@ -49,7 +49,6 @@ namespace {
 
 	std::string get_response(const std::string& url) {
 		init_curl();
-
 		std::string response;
 		curl_easy_reset(curl);
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -57,18 +56,17 @@ namespace {
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPD-Presence");
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L); // Faster timeout
-
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
 		LOG_DEBUG("Making request to: " << url);
+		CURLcode res = curl_easy_perform(curl);
 
-		// Get response code for debugging
 		long response_code = 0;
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 		LOG_DEBUG("Response code: " << response_code);
 
-		CURLcode res = curl_easy_perform(curl);
 		if (res != CURLE_OK) {
-			LOG_ERR("cURL request failed for URL: " << url 
+			LOG_ERR("cURL request failed for URL: " << url
+					<< " - HTTP " << response_code
 					<< " - Error: " << curl_easy_strerror(res));
 			return {};
 		}
