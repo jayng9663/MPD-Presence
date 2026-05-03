@@ -61,17 +61,17 @@ namespace {
 
 		LOG_DEBUG("Making request to: " << url);
 
+		// Get response code for debugging
+		long response_code = 0;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+		LOG_DEBUG("Response code: " << response_code);
+
 		CURLcode res = curl_easy_perform(curl);
 		if (res != CURLE_OK) {
 			LOG_ERR("cURL request failed for URL: " << url 
 					<< " - Error: " << curl_easy_strerror(res));
 			return {};
 		}
-
-		// Get response code for debugging
-		long response_code = 0;
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-		LOG_DEBUG("Response code: " << response_code);
 
 		return response;
 	}
