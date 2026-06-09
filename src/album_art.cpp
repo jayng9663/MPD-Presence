@@ -60,13 +60,14 @@ namespace {
 		LOG_DEBUG("Making request to: " << url);
 		CURLcode res = curl_easy_perform(curl);
 
-		long response_code = 0;
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-		LOG_DEBUG("Response code: " << response_code);
+		long httpCode = 0;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+		LOG_DEBUG("HTTP response: " << httpCode
+				<< "  body_size=" << response.size() << " bytes");
 
 		if (res != CURLE_OK) {
 			LOG_ERR("cURL request failed for URL: " << url
-					<< " - HTTP " << response_code
+					<< " - HTTP " << httpCode
 					<< " - Error: " << curl_easy_strerror(res));
 			return {};
 		}
@@ -99,9 +100,9 @@ std::vector<std::pair<std::string, double>> json_get_release_ids_search(
 	}
 
 	std::string url =
-		"https://musicbrainz.org/ws/2/release/?query=artist:" +
-		url_encode(artist) + "%20release:" +
-		url_encode(album) + "%20date:" +
+		"https://musicbrainz.org/ws/2/release/?query=artist:%22" +
+		url_encode(artist) + "%22%20release:%22" +
+		url_encode(album) + "%22%20date:" +
 		url_encode(date) + "&fmt=json";
 
 	std::string response = get_response(url);

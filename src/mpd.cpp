@@ -30,8 +30,8 @@ static bool ensureConnected() {
 	const int maxRetries = 20;
 
 	g_conn = mpd_connection_new(
-			g_config.getHost().c_str(),
-			g_config.getPort(),
+			std::string(config::MPD_HOST).c_str(),
+			config::MPD_PORT,
 			30000
 			);
 
@@ -53,8 +53,8 @@ static bool ensureConnected() {
 
 	retryCount = 0;
 
-	if (!g_config.getPassword().empty()) {
-		if (!mpd_run_password(g_conn, g_config.getPassword().c_str())) {
+	if (!config::MPD_PASSWORD.empty()) {
+		if (!mpd_run_password(g_conn, std::string(config::MPD_PASSWORD).c_str())) {
 			LOG_ERR("MPD authentication failed");
 			mpd_connection_free(g_conn);
 			g_conn = nullptr;
@@ -62,7 +62,7 @@ static bool ensureConnected() {
 		}
 	}
 
-	LOG_INFO("MPD connected to " << g_config.getHost() << ":" << g_config.getPort());
+	LOG_INFO("MPD connected to " << config::MPD_HOST << ":" << config::MPD_PORT);
 	return true;
 }
 
@@ -105,7 +105,7 @@ void fetchMPDInfo() {
 
 			v = mpd_song_get_uri(song);
 			if (v)
-				g_mpd.filePath = g_config.getMusicFolder() + v;
+				g_mpd.filePath = std::string(config::MUSIC_FOLDER) + v;
 
 			g_mpd.SongID   = mpd_status_get_song_id(status);
 			g_mpd.elapsed  = mpd_status_get_elapsed_time(status);

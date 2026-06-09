@@ -6,8 +6,6 @@
 #include "logger.hpp"
 #include "config.hpp"
 
-constexpr auto APPLICATION_ID = "1343479020918014013";
-
 static int64_t     StartTime = 0;
 static int64_t     EndTime   = 0;
 static std::string currentDetails;
@@ -25,7 +23,7 @@ static std::mutex rpcMutex;
 static void discordSetup() {
 	LOG_DEBUG("Setting up Discord RPC");
 	discord::RPCManager::get()
-		.setClientID(APPLICATION_ID)
+		.setClientID(config::DISCORD_APP_ID.data())
 		.onReady([](discord::User const& user) {
 				LOG_INFO("Discord: connected to " << user.username
 						<< "#" << user.discriminator << " - " << user.id);
@@ -61,28 +59,21 @@ static void updatePresenceLocked() {
 	presence.refresh();
 }
 
-// Song ID of the track currently shown in Discord.
-// Set by the main thread on every track change; read by art threads.
 static std::atomic<int> g_rpcSongID{-1};
 
-// Discord silently drops presence updates faster than ~15 seconds apart.
-// We enforce our own gate: if a push is attempted within the window, we mark
-// it as pending. The main loop checks for a pending update each tick and
-// re-sends it once the window has elapsed.
-static constexpr int64_t DISCORD_RATE_LIMIT_SECONDS = 16; // 1s margin over Discord's 16s
-static int64_t  g_lastPushTime   = 0;   // wall-clock of last actual push
-static bool     g_pendingUpdate  = false; // an update was suppressed and needs retry
+static constexpr int64_t DISCORD_RATE_LIMIT_SECONDS = 16;
+static int64_t  g_lastPushTime   = 0;
+static bool     g_pendingUpdate  = false;
 
 // Must be called with rpcMutex held.
-// Returns true if the update was sent, false if rate-limited (pending flagged).
 static bool pushPresenceOrDefer() {
 	int64_t now = static_cast<int64_t>(
 			std::chrono::duration_cast<std::chrono::seconds>(
 				std::chrono::system_clock::now().time_since_epoch()).count());
 
 	if (now - g_lastPushTime < DISCORD_RATE_LIMIT_SECONDS) {
-		LOG_DEBUG("Presence update deferred (rate limit, " 
-				<< (DISCORD_RATE_LIMIT_SECONDS - (now - g_lastPushTime)) 
+		LOG_DEBUG("Presence update deferred (rate limit, "
+				<< (DISCORD_RATE_LIMIT_SECONDS - (now - g_lastPushTime))
 				<< "s remaining)");
 		g_pendingUpdate = true;
 		return false;
@@ -100,9 +91,6 @@ void rpc_setup()      { discordSetup(); }
 void rpc_initialize() { discord::RPCManager::get().initialize(); }
 void rpc_shutdown()   { discord::RPCManager::get().shutdown(); }
 
-// Set all track metadata and record the song ID in one locked operation.
-// Must be called by the main thread before launching the art thread so that
-// g_rpcSongID is always up-to-date before any art thread checks it.
 void rpc_set_current_song(int songID,
 		const std::string& details,
 		const std::string& state,
@@ -115,7 +103,7 @@ void rpc_set_current_song(int songID,
 	currentDetails   = details;
 	currentState     = state;
 	currentImageText = largeImageText;
-	LargeImageKey    = "mpd";   // always reset to placeholder on track change (If Imgge not found)
+	LargeImageKey    = "mpd";
 	StartTime        = startTime;
 	EndTime          = endTime;
 	LOG_DEBUG("rpc_set_current_song: id=" << songID << " details=" << details);
@@ -189,11 +177,6 @@ std::string rpc_get_state()         { std::lock_guard<std::mutex> l(rpcMutex); r
 std::string rpc_get_largeimagetext(){ std::lock_guard<std::mutex> l(rpcMutex); return currentImageText; }
 std::string rpc_get_largeimage()    { std::lock_guard<std::mutex> l(rpcMutex); return LargeImageKey; }
 
-// Atomically: check song ID is still current, apply art, push to Discord.
-// Holding the mutex for the entire operation means two art threads can never
-// interleave their writes — whichever acquires the lock first either applies
-// its result (if still current) or bails out (if already superseded).
-// Returns the current song ID (for stale checks in the art thread)
 int rpc_get_current_song_id() {
 	return g_rpcSongID.load();
 }
@@ -232,9 +215,6 @@ bool rpc_apply_art_if_current(int songID,
 	return true;
 }
 
-// Called by the main loop every tick: if a previous update was rate-limited
-// and the window has now expired, re-send the current presence state.
-// The timestamps are recalculated fresh so the timer is always accurate.
 bool rpc_flush_if_pending(int64_t newStartTime, int64_t newEndTime) {
 	std::lock_guard<std::mutex> lock(rpcMutex);
 	if (!g_pendingUpdate) return false;
@@ -245,7 +225,6 @@ bool rpc_flush_if_pending(int64_t newStartTime, int64_t newEndTime) {
 
 	if (now - g_lastPushTime < DISCORD_RATE_LIMIT_SECONDS) return false;
 
-	// Update timestamps to current time before re-sending
 	StartTime = newStartTime;
 	EndTime   = newEndTime;
 
@@ -258,15 +237,11 @@ bool rpc_flush_if_pending(int64_t newStartTime, int64_t newEndTime) {
 
 void rpc_load_button_settings() {
 	std::lock_guard<std::mutex> lock(rpcMutex);
-	std::string l1 = g_config.getButton1Label();
-	std::string u1 = g_config.getButton1Url();
-	std::string l2 = g_config.getButton2Label();
-	std::string u2 = g_config.getButton2Url();
 
-	if (!l1.empty()) Button1Label = l1;
-	if (!u1.empty()) Button1Url   = u1;
-	if (!l2.empty()) Button2Label = l2;
-	if (!u2.empty()) Button2Url   = u2;
+	if (!config::BUTTON1LABEL.empty()) Button1Label = std::string(config::BUTTON1LABEL);
+	if (!config::BUTTON1URL.empty())   Button1Url   = std::string(config::BUTTON1URL);
+	if (!config::BUTTON2LABEL.empty()) Button2Label = std::string(config::BUTTON2LABEL);
+	if (!config::BUTTON2URL.empty())   Button2Url   = std::string(config::BUTTON2URL);
 
 	LOG_DEBUG("Button1: '" << Button1Label << "' -> '" << Button1Url << "'");
 	LOG_DEBUG("Button2: '" << Button2Label << "' -> '" << Button2Url << "'");

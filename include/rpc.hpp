@@ -43,7 +43,6 @@ int rpc_get_current_song_id();
 // Atomically apply art + timestamps + push. No-op (returns false) if song changed.
 bool rpc_apply_art_if_current(int songID,
 		const std::string& cover_url,
-		const std::string& page_url,
 		const std::string& btn1_label,
 		const std::string& btn1_url,
 		int64_t startTime,

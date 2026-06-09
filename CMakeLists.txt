@@ -37,11 +37,11 @@ add_executable(MPD-Presence
     src/rpc.cpp
     src/mpd.cpp
     src/album_art.cpp
-    src/config.cpp
 )
 
 target_include_directories(MPD-Presence PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/cpp-logger
     ${MPDCLIENT_INCLUDE_DIRS}
 )
 

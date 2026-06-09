@@ -21,13 +21,12 @@ void signalHandler(int signum) {
 	keepRunning = false;
 }
 
-Config g_config("MPD-Presence.conf");
-
 int main(int argc, char* argv[]) {
 	std::signal(SIGINT,  signalHandler);
 	std::signal(SIGTERM, signalHandler);
 
 	bool verbose = false;
+	std::string logFile = "mpd-presence.log";
 	for (int i = 1; i < argc; ++i) {
 		std::string arg = argv[i];
 		if (arg == "--verbose" || arg == "-v")   verbose = true;
@@ -41,17 +40,12 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// Verbosity
 	if (verbose) Logger::get().setLevel(LogLevel::DEBUG);
-
-	if (!g_config.loadConfig()) {
-		LOG_ERR("Failed to load configuration file");
-		return 1;
-	}
+	if (!logFile.empty() && !Logger::get().setFile(logFile.c_str()))
+		LOG_WARN("Counld not open log file: " << logFile);
 
 	// Album art method order
-	std::string methodsStr = g_config.getAlbumArtMethodOrder();
-	if (methodsStr.empty()) methodsStr = "fingerprint,search";
+	std::string methodsStr(config::ALBUM_ART_METHOD_ORDER);
 
 	{
 		std::istringstream iss(methodsStr);
@@ -76,6 +70,20 @@ int main(int argc, char* argv[]) {
 	int64_t lastElapsed         = 0;
 	bool    lastWasIdle         = true;
 
+	const std::vector<std::string> ignoreList = []() {
+		std::vector<std::string> list;
+		std::istringstream iss{std::string(config::MPD_IGNORE)};
+		std::string item;
+		while (std::getline(iss, item, ',')) {
+			auto s = item.find_first_not_of(" \t");
+			auto e = item.find_last_not_of(" \t");
+			if (s != std::string::npos)
+				list.push_back(item.substr(s, e - s + 1));
+		}
+		return list;
+	}();
+	const std::string musicFolder(config::MUSIC_FOLDER);
+
 	while (keepRunning) {
 		fetchMPDInfo();
 
@@ -93,11 +101,10 @@ int main(int argc, char* argv[]) {
 			|| artist == "Unknown Artist"
 			|| [&]() {
 				const std::string& fp = getMPDFilePath();
-				const std::string& mf = g_config.getMusicFolder();
-				for (const auto& p : g_config.getIgnoreList()) {
-					// Strip leading slash so "/AMSR" matches "music_folder/AMSR/..."
+				for (const auto& p : ignoreList) {
+					// Strip leading slash so "/ASMR" matches "music_folder/ASMR/..."
 					const std::string rel = (!p.empty() && p[0] == '/') ? p.substr(1) : p;
-					if (fp.find(mf + rel) == 0) return true;
+					if (fp.find(musicFolder + rel) == 0) return true;
 				}
 				return false;
 			}();
@@ -117,7 +124,7 @@ int main(int argc, char* argv[]) {
 			if (idleStateChanged) {
 				LOG_INFO("Entering idle state — clearing Discord presence");
 				rpc_clear_presence();
-				needsUpdate   = false; // clear already sent, no further push needed
+				needsUpdate   = false;
 				lastWasIdle   = true;
 				lastSongID    = -1;
 			}
@@ -160,11 +167,11 @@ int main(int argc, char* argv[]) {
 					}
 				}
 
-				// When playing, show "View Album" only if config Button1 is set and art was found
+				// Show "View Album" button only if config Button1 is set and art was found
 				std::string btnLabel, btnUrl;
 				{
-					std::string cfgLabel = g_config.getButton1Label();
-					std::string cfgUrl   = g_config.getButton1Url();
+					std::string cfgLabel(config::BUTTON1LABEL);
+					std::string cfgUrl(config::BUTTON1URL);
 					if (!cfgLabel.empty() && !cfgUrl.empty() && !urls.page_url.empty()) {
 						btnLabel = "View Album";
 						btnUrl   = urls.page_url;
@@ -212,8 +219,6 @@ int main(int argc, char* argv[]) {
 			LOG_DEBUG("Updating Discord presence");
 			rpc_update_presence();
 		} else {
-			// Re-send any rate-limited update. When paused or idle the
-			// timestamps are 0; when playing they reflect the current position.
 			int64_t freshStart = (!isIdle && !paused && total > 0) ? now - elapsed : 0;
 			int64_t freshEnd   = (!isIdle && !paused && total > 0) ? now + (total - elapsed) : 0;
 			rpc_flush_if_pending(freshStart, freshEnd);

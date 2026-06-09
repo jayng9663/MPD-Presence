@@ -11,7 +11,7 @@ struct MPDState {
 	std::string date;
 	std::string filePath;
 	std::string fingerprint;
-	int SongID;
+	int SongID = -1;;
 
 	int64_t elapsed = 0;
 	int64_t total = 0;
