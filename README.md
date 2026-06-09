@@ -12,8 +12,10 @@ A Discord Rich Presence client for [MPD](https://www.musicpd.org/) (Music Player
 
 - Displays track title, artist, album, and release year in Discord
 - Album art lookup via **AcoustID fingerprint** and/or **MusicBrainz text search**
-- Configurable button (e.g. "View Album" linking to the MusicBrainz release page)
+- "View Album" button linking to the MusicBrainz release page when art is found
+- Optional second configurable Discord button
 - Seek, pause/resume, and idle state detection
+- Path-based ignore list to suppress presence for specific library folders
 - Discord rate-limit aware — deferred updates are flushed automatically
 - Persistent MPD connection with automatic reconnect
 
@@ -60,31 +62,13 @@ flowchart TD
 
 ## Configuration
 
-Create a file named `MPD-Presence.conf` in the working directory:
+All configuration is done at compile time by editing **`include/config.hpp`**
 
-```ini
-# MPD connection
-host        = localhost
-port        = 6600
-password    =               # leave empty if no password
+After editing `config.hpp`, rebuild the project for changes to take effect.
 
-# Path to your music folder (must end with /)
-music_folder = /home/user/Music/
+### AcoustID API Key
 
-# Logging level: none | info | debug
-verbose     = info
-
-# Album art lookup method order (comma-separated)
-# fingerprint = AcoustID chromaprint (more accurate)
-# search      = MusicBrainz text search (fallback)
-method_order = fingerprint,search
-
-# Optional Discord buttons (leave blank to use auto "View Album" button)
-Button1Label =
-Button1Url   =
-Button2Label =
-Button2Url   =
-```
+The AcoustID client key used for fingerprint lookups is hardcoded in `src/main.cpp`. Replace the string `"2jFwlOUpO2"` with your own key from [acoustid.org/login](https://acoustid.org/login) if needed.
 
 ---
 
@@ -96,6 +80,7 @@ Button2Url   =
 | [discord-presence](https://github.com/EclipseMenu/discord-presence) | Discord Rich Presence (Modern C++ rewrite) |
 | [libcurl](https://curl.se/libcurl/) | HTTP requests (MusicBrainz, AcoustID, Cover Art Archive) |
 | [nlohmann/json](https://github.com/nlohmann/json) | JSON parsing |
+| [cpp-logger](https://github.com/jayng9663/cpp-logger) | CPP Logger |
 
 ---
 
@@ -107,25 +92,33 @@ cmake ..
 make
 ```
 
+`nlohmann/json` is found automatically via CMake or pkg-config. If neither is available, place a copy of the single-header `nlohmann/json.hpp` under `third_party/nlohmann/json.hpp`.
+
 ---
 
 ## Running
 
 ```bash
-./MPD-Presence
+./MPD-Presence [OPTIONS]
+
+Options:
+  -v, --verbose   Enable DEBUG-level logging
+  -h, --help      Show this message
 ```
 
-The process will run in the foreground. Stop it with `Ctrl+C` or send `SIGTERM`.
+The process runs in the foreground. Stop it with `Ctrl+C` or `SIGTERM`.
 
 ---
 
 ## Album Art Resolution
 
-When a track changes, the following sequence runs before the presence update is pushed:
+When a track changes, the following sequence runs **synchronously** before the presence update is pushed:
 
 1. If `fingerprint` is listed first and a Chromaprint fingerprint is available, query **AcoustID** for matching release IDs.
-2. For each release ID returned, check **Cover Art Archive** for a front image.
-3. If no match is found (or `fingerprint` is not configured), fall back to a **MusicBrainz text search** using artist + album + date.
+2. For each release ID, check **Cover Art Archive** for a front image (`/front-500`).
+3. If no match is found (or `fingerprint` is not in the method list), fall back to a **MusicBrainz text search** using artist + album + date with a score threshold of 100.
 4. If nothing resolves, the default `mpd` placeholder image is used.
 
-Results are cached in memory for the lifetime of the process so repeated lookups for the same track are free.
+When art is found, the first button slot is automatically set to **"View Album"** linking to the corresponding MusicBrainz release page, regardless of what `BUTTON1LABEL`/`BUTTON1URL` are set to.
+
+All HTTP responses and cover-art existence checks are cached in memory for the lifetime of the process, so repeated lookups for the same track are free.
