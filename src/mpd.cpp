@@ -104,20 +104,34 @@ void fetchMPDInfo() {
 			g_mpd.date = v ? v : "";
 
 			v = mpd_song_get_uri(song);
-			if (v)
-				g_mpd.filePath = std::string(config::MUSIC_FOLDER) + v;
+			const std::string uri = v ? v : "";
+			if (!uri.empty())
+				g_mpd.filePath = std::string(config::MUSIC_FOLDER) + uri;
 
 			g_mpd.SongID   = mpd_status_get_song_id(status);
 			g_mpd.elapsed  = mpd_status_get_elapsed_time(status);
 			g_mpd.total    = mpd_status_get_total_time(status);
 
-			const char* uri = mpd_song_get_uri(song);
-			if (uri) {
+			// Chromaprint fingerprinting decodes the whole file, so it must not
+			// run on every poll. Compute it once per song and cache the result
+			// (the cache persists across reconnects, which reset g_mpd).
+			static int         lastFpSongID = -1;
+			static std::string cachedFingerprint;
+			static bool        haveFp = false;
+
+			if (uri.empty()) {
+				haveFp = false;
+				g_mpd.fingerprint.clear();
+			} else if (haveFp && g_mpd.SongID == lastFpSongID) {
+				g_mpd.fingerprint = cachedFingerprint;
+			} else {
 				size_t bufsize = 8192;
 				std::vector<char> buffer(bufsize);
+				g_mpd.fingerprint.clear();
 
 				while (true) {
-					const char* fp = mpd_run_getfingerprint_chromaprint(g_conn, uri, buffer.data(), buffer.size());
+					const char* fp = mpd_run_getfingerprint_chromaprint(
+							g_conn, uri.c_str(), buffer.data(), buffer.size());
 					if (fp) {
 						g_mpd.fingerprint = fp;
 						break;
@@ -125,13 +139,15 @@ void fetchMPDInfo() {
 						bufsize *= 2;
 						buffer.resize(bufsize);
 					} else {
-						g_mpd.fingerprint.clear();
 						LOG_ERR("Error getting fingerprint");
 						break;
 					}
 				}
-			} else {
-				g_mpd.fingerprint.clear();
+
+				// Cache even on failure so we don't retry the same file every poll.
+				cachedFingerprint = g_mpd.fingerprint;
+				lastFpSongID      = g_mpd.SongID;
+				haveFp            = true;
 			}
 
 			mpd_song_free(song);

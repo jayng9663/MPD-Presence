@@ -1,3 +1,6 @@
+# Personal configuration (copy from config.hpp.example — may contain secrets)
+include/config.hpp
+
 # CMake generated files
 CMakeCache.txt
 CMakeFiles/

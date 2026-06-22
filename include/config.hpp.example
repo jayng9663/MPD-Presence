@@ -1,7 +1,15 @@
 #pragma once
 #include <string_view>
 
-/** Central configuration — edit this file to customise all daemon behaviour. **/
+/**
+ * Central configuration — edit this file to customise all daemon behaviour.
+ *
+ * This is a TEMPLATE. Copy it to `config.hpp` before building:
+ *     cp include/config.hpp.example include/config.hpp
+ *
+ * `config.hpp` is git-ignored so your personal settings (and MPD password)
+ * are never committed.
+ */
 namespace config {
 
 	/** Discord application ID. **/
@@ -16,7 +24,7 @@ namespace config {
 	/** MPD port **/
 	inline constexpr int MPD_PORT = 6650;
 
-	/** MPD Password **/
+	/** MPD Password (leave empty if MPD has no password) **/
 	inline constexpr std::string_view MPD_PASSWORD = "";
 
 	/** Local music folder — must end with '/' **/

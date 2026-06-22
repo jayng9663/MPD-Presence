@@ -62,9 +62,15 @@ flowchart TD
 
 ## Configuration
 
-All configuration is done at compile time by editing **`include/config.hpp`**
+All configuration is done at compile time. Copy the template, then edit your copy:
 
-After editing `config.hpp`, rebuild the project for changes to take effect.
+```bash
+cp include/config.hpp.example include/config.hpp
+```
+
+`include/config.hpp` is git-ignored, so your personal settings — including your
+MPD password — are never committed. Edit it, then rebuild the project for changes
+to take effect.
 
 ### AcoustID API Key
 
