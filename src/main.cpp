@@ -14,11 +14,13 @@
 #include "util.hpp"
 
 std::atomic<bool> keepRunning(true);
+std::atomic<int>  stopSignal(0);
 
 std::vector<std::string> artMethods;
 
+// Only async-signal-safe work here: the logger takes a mutex, so log after the loop exits
 void signalHandler(int signum) {
-	LOG_INFO("Received signal " << signum << ", stopping...");
+	stopSignal  = signum;
 	keepRunning = false;
 }
 
@@ -47,7 +49,7 @@ int main(int argc, char* argv[]) {
 
 	// Album art method order
 	artMethods = util::split_trim(std::string(config::ALBUM_ART_METHOD_ORDER), ',');
-	if (artMethods.empty()) artMethods = {"fingerprint", "search"};
+	if (artMethods.empty()) artMethods = {"tag", "fingerprint", "search"};
 
 	// Initial MPD fetch so we have a valid state before RPC init
 	fetchMPDInfo();
@@ -59,6 +61,7 @@ int main(int argc, char* argv[]) {
 	int     lastSongID          = -1;
 	bool    lastPaused          = false;
 	int64_t lastElapsed         = 0;
+	int64_t lastPollTime        = 0;
 	bool    lastWasIdle         = true;
 
 	const std::vector<std::string> ignoreList =
@@ -71,6 +74,7 @@ int main(int argc, char* argv[]) {
 		const std::string title   = getMPDTitle();
 		const std::string album   = getMPDAlbum();
 		const std::string artist  = getMPDArtist();
+		const std::string firstArtist = getMPDFirstArtist();
 		const std::string date    = getMPDDate();
 		const int         songID  = getMPDSongID();
 		const bool        paused  = getMPDIsPaused();
@@ -94,10 +98,13 @@ int main(int argc, char* argv[]) {
 		const bool pauseStateChanged = (paused != lastPaused);
 		const bool idleStateChanged  = (isIdle != lastWasIdle);
 
-		const bool seekDetected = !isIdle && !paused && !trackChanged &&
-			std::abs(elapsed - lastElapsed) > 3;
-
 		int64_t now = static_cast<int64_t>(std::time(nullptr));
+
+		// Compare against where playback should be by now, so a slow iteration
+		// (e.g. the album art lookup) isn't mistaken for a seek
+		const int64_t expectedElapsed = lastElapsed + (lastPaused ? 0 : now - lastPollTime);
+		const bool seekDetected = !isIdle && !paused && !trackChanged &&
+			std::abs(elapsed - expectedElapsed) > 3;
 
 		bool needsUpdate = false;
 
@@ -114,8 +121,7 @@ int main(int argc, char* argv[]) {
 			if (trackChanged || idleStateChanged) {
 				LOG_INFO("Track changed: " << title << " — " << artist);
 
-				const std::string fingerprint = getMPDFingerprint();
-				const int         trackTotal  = static_cast<int>(total);
+				const int trackTotal = static_cast<int>(total);
 
 				int64_t startTime = 0, endTime = 0;
 				if (!paused && total > 0) {
@@ -126,7 +132,19 @@ int main(int argc, char* argv[]) {
 				// Fetch album art synchronously before pushing presence
 				AlbumUrls urls;
 				for (const auto& method : artMethods) {
-					if (method == "fingerprint") {
+					if (method == "tag") {
+						const std::string albumId        = getMPDAlbumId();
+						const std::string releaseGroupId = getMPDReleaseGroupId();
+						if (!albumId.empty() || !releaseGroupId.empty()) {
+							urls = get_album_urls_mbid(albumId, releaseGroupId);
+							if (!urls.cover_url.empty()) {
+								LOG_INFO("Album art: tag succeeded");
+								break;
+							}
+						}
+					} else if (method == "fingerprint") {
+						// Computed only here: Chromaprint makes MPD decode the file
+						const std::string fingerprint = getMPDFingerprint();
 						if (!fingerprint.empty()) {
 							urls = get_album_urls_fingerprint(
 									trackTotal, fingerprint,
@@ -137,10 +155,10 @@ int main(int argc, char* argv[]) {
 							}
 						}
 					} else if (method == "search") {
-						if (!artist.empty() && artist != "Unknown Artist" &&
+						if (!firstArtist.empty() && firstArtist != "Unknown Artist" &&
 								!album.empty()  && album  != "Unknown Album"  &&
 								!date.empty()   && date   != "Unknown Date") {
-							urls = get_album_urls_search(artist, album, date, 100);
+							urls = get_album_urls_search(firstArtist, album, date, 100);
 							if (!urls.cover_url.empty()) {
 								LOG_INFO("Album art: search succeeded");
 								break;
@@ -149,28 +167,25 @@ int main(int argc, char* argv[]) {
 					}
 				}
 
-				// Show "View Album" button only if config Button1 is set and art was found
-				std::string btnLabel, btnUrl;
-				{
-					std::string cfgLabel(config::BUTTON1LABEL);
-					std::string cfgUrl(config::BUTTON1URL);
-					if (!cfgLabel.empty() && !cfgUrl.empty() && !urls.page_url.empty()) {
-						btnLabel = "View Album";
-						btnUrl   = urls.page_url;
-					}
-				}
+				// If config Button1 is set, it becomes "View Album" while the track has
+				// a release page, and reverts to the configured button otherwise
+				const std::string cfgLabel(config::BUTTON1LABEL);
+				const std::string cfgUrl(config::BUTTON1URL);
+				if (!cfgLabel.empty() && !cfgUrl.empty() && !urls.page_url.empty())
+					rpc_set_button1("View Album", urls.page_url);
+				else
+					rpc_set_button1(cfgLabel, cfgUrl);
 
 				// Set all metadata + art in one go, then push once
+				const std::string year = util::year_from_date(date);
 				rpc_set_current_song(title,
-						date.empty() ? artist : artist + " - " + date,
+						year.empty() ? artist : artist + " - " + year,
 						album,
 						startTime,
 						endTime);
 
 				rpc_set_largeimage(urls.cover_url.empty() ? "mpd" : urls.cover_url);
-
-				if (!btnLabel.empty() && !btnUrl.empty())
-					rpc_set_button1(btnLabel, btnUrl);
+				rpc_set_paused(paused);
 
 				rpc_update_presence();
 
@@ -178,11 +193,13 @@ int main(int argc, char* argv[]) {
 				lastWasIdle         = false;
 				lastPaused          = paused;
 				lastElapsed         = elapsed;
+				lastPollTime        = now;
 				continue;
 			}
 
 			// Pause/resume or seek
 			if (pauseStateChanged || seekDetected) {
+				rpc_set_paused(paused);
 				if (paused || total == 0) {
 					rpc_set_starttime(0);
 					rpc_set_endtime(0);
@@ -207,10 +224,13 @@ int main(int argc, char* argv[]) {
 
 		rpc_reconnect_if_needed();
 
-		lastElapsed = elapsed;
+		lastElapsed  = elapsed;
+		lastPaused   = paused;
+		lastPollTime = now;
 		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	}
 
+	LOG_INFO("Received signal " << stopSignal << ", stopping...");
 	rpc_shutdown();
 	LOG_INFO("Discord RPC shutdown complete");
 	return 0;
