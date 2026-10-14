@@ -83,7 +83,7 @@ namespace {
 	// Simple cache for search results
 	static std::unordered_map<std::string, std::vector<std::pair<std::string, double>>> search_cache;
 
-	// Cache for cover art existence checks
+	// Cache for cover art existence checks, keyed by image URL
 	static std::unordered_map<std::string, bool> cover_art_cache;
 
 } // anonymous namespace
@@ -226,32 +226,32 @@ std::vector<std::string> json_get_release_ids_fingerprint(
 	return parse_release_ids_fingerprint(response);
 }
 
-// Over Art Archive
+// Cover Art Archive
 bool cover_art_exists(const std::string& id)
 {
+	return image_exists(get_album_art_url(id));
+}
+
+bool image_exists(const std::string& art_url)
+{
 	// Check cache first
-	auto cached = cover_art_cache.find(id);
+	auto cached = cover_art_cache.find(art_url);
 	if (cached != cover_art_cache.end()) {
-		LOG_DEBUG("Using cached cover art check for ID: " << id 
+		LOG_DEBUG("Using cached cover art check for: " << art_url
 				<< " (result: " << (cached->second ? "true" : "false") << ")");
 		return cached->second;
 	}
 
-	std::string art_url = get_album_art_url(id);
-
-	LOG_DEBUG("Checking cover art existence for ID: " << id 
-			<< " at URL: " << art_url);
+	LOG_DEBUG("Checking cover art existence at URL: " << art_url);
 
 	CURL* curl = curl_easy_init();
-	if (!curl) {
-		cover_art_cache[id] = false;
-		return false;
-	}
+	if (!curl) return false;
 
 	curl_easy_setopt(curl, CURLOPT_URL, art_url.c_str());
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
 
 	CURLcode res = curl_easy_perform(curl);
 	long code = 0;
@@ -262,9 +262,12 @@ bool cover_art_exists(const std::string& id)
 	curl_easy_cleanup(curl);
 
 	bool exists = (res == CURLE_OK && code == 200);
-	cover_art_cache[id] = exists; // Cache result
-	LOG_DEBUG("Cover art check for ID " << id 
-			<< " returned: " << (exists ? "true" : "false"));
+	// Only cache definitive answers, so a network error or 5xx doesn't
+	// hide this album's art until restart
+	if (code == 200 || code == 404) cover_art_cache[art_url] = exists;
+	LOG_DEBUG("Cover art check for " << art_url
+			<< " returned: " << (exists ? "true" : "false")
+			<< " (HTTP " << code << ")");
 	return exists;
 }
 
@@ -276,6 +279,45 @@ std::string get_album_art_url(const std::string& id)
 std::string get_release_page_url(const std::string& id)
 {
 	return "https://musicbrainz.org/release/" + id;
+}
+
+std::string get_release_group_art_url(const std::string& id)
+{
+	return "https://coverartarchive.org/release-group/" + id + "/front-500";
+}
+
+std::string get_release_group_page_url(const std::string& id)
+{
+	return "https://musicbrainz.org/release-group/" + id;
+}
+
+AlbumUrls get_album_urls_mbid(
+		const std::string& releaseId,
+		const std::string& releaseGroupId)
+{
+	LOG_DEBUG("Starting tag lookup with release: " << releaseId
+			<< ", release group: " << releaseGroupId);
+
+	AlbumUrls result = {};
+
+	if (!releaseId.empty() && cover_art_exists(releaseId)) {
+		result.cover_url = get_album_art_url(releaseId);
+		result.page_url  = get_release_page_url(releaseId);
+	} else if (!releaseGroupId.empty() &&
+			image_exists(get_release_group_art_url(releaseGroupId))) {
+		// This exact release has no art, but another release in its group might
+		result.cover_url = get_release_group_art_url(releaseGroupId);
+		result.page_url  = releaseId.empty()
+			? get_release_group_page_url(releaseGroupId)
+			: get_release_page_url(releaseId);
+	} else {
+		LOG_DEBUG("No valid cover art found for tagged IDs");
+		return {};
+	}
+
+	LOG_INFO("Found album art URL: " << result.cover_url);
+	LOG_INFO("Found release page URL: " << result.page_url);
+	return result;
 }
 
 AlbumUrls get_album_urls_search(
