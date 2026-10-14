@@ -19,6 +19,8 @@ static std::string currentDetails;
 static std::string currentState;
 static std::string currentImageText;
 static std::string LargeImageKey = "mpd";
+static std::string SmallImageKey;
+static std::string SmallImageText;
 static std::string Button1Label;
 static std::string Button1Url;
 static std::string Button2Label;
@@ -65,17 +67,17 @@ static void updatePresenceLocked() {
 		.setDetails(currentDetails)
 		.setState(currentState)
 		.setLargeImageText(currentImageText)
-		.setActivityType(discord::ActivityType::Listening)
+		.setActivityType(static_cast<discord::ActivityType>(config::DISCORD_ACTIVITY_TYPE))
 		.setStatusDisplayType(discord::StatusDisplayType::Details)
 		.setLargeImageKey(LargeImageKey)
+		.setSmallImageKey(SmallImageKey)
+		.setSmallImageText(SmallImageText)
 		.setStartTimestamp(StartTime)
 		.setEndTimestamp(EndTime);
 
-	if (!Button1Label.empty() && !Button1Url.empty())
-		presence.setButton1(Button1Label, Button1Url);
-
-	if (!Button2Label.empty() && !Button2Url.empty())
-		presence.setButton2(Button2Label, Button2Url);
+	// Always set both buttons so clearing one actually removes it
+	presence.setButton1(Button1Label, Button1Url, !Button1Label.empty() && !Button1Url.empty());
+	presence.setButton2(Button2Label, Button2Url, !Button2Label.empty() && !Button2Url.empty());
 
 	presence.refresh();
 }
@@ -213,6 +215,13 @@ void rpc_set_largeimage(const std::string& v) {
 	std::lock_guard<std::mutex> lock(rpcMutex);
 	LargeImageKey = v;
 	LOG_DEBUG("LargeImage = " << v);
+}
+
+void rpc_set_paused(bool paused) {
+	std::lock_guard<std::mutex> lock(rpcMutex);
+	SmallImageKey  = std::string(paused ? config::SMALL_IMAGE_PAUSED : config::SMALL_IMAGE_PLAYING);
+	SmallImageText = SmallImageKey.empty() ? "" : (paused ? "Paused" : "Playing");
+	LOG_DEBUG("SmallImage = " << SmallImageKey);
 }
 
 void rpc_set_button1(const std::string& label, const std::string& url) {
