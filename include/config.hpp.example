@@ -33,6 +33,10 @@ namespace config {
 	/** MPD Ignore list (comma-separated paths) **/
 	inline constexpr std::string_view MPD_IGNORE = "";
 
+	/** AcoustID client API key for fingerprint lookups.
+	 *  Get your own at https://acoustid.org/login **/
+	inline constexpr std::string_view ACOUSTID_API_KEY = "2jFwlOUpO2";
+
 	/** Album art method order (comma-separated) **/
 	inline constexpr std::string_view ALBUM_ART_METHOD_ORDER = "fingerprint";
 	// inline constexpr std::string_view ALBUM_ART_METHOD_ORDER = "fingerprint,search";
