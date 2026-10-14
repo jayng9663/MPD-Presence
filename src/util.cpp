@@ -1,5 +1,6 @@
 #include "util.hpp"
 #include <sstream>
+#include <cctype>
 
 namespace util {
 
@@ -17,6 +18,22 @@ namespace util {
 		}
 
 		return result;
+	}
+
+	std::string join(const std::vector<std::string>& items, const std::string& sep) {
+		std::string result;
+		for (size_t i = 0; i < items.size(); ++i) {
+			if (i > 0) result += sep;
+			result += items[i];
+		}
+		return result;
+	}
+
+	std::string year_from_date(const std::string& date) {
+		if (date.size() < 4) return date;
+		for (size_t i = 0; i < 4; ++i)
+			if (!std::isdigit(static_cast<unsigned char>(date[i]))) return date;
+		return date.substr(0, 4);
 	}
 
 } // namespace util
