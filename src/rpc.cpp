@@ -3,8 +3,15 @@
 #include <iostream>
 #include <string>
 #include <mutex>
+#include <atomic>
+#include <chrono>
+#include <cstdlib>
+#include <filesystem>
+#include <unistd.h>
 #include "logger.hpp"
 #include "config.hpp"
+// Private header of discord-presence, used to reset its reconnect backoff (see below)
+#include "../lib/discord-presence/src/backoff.hpp"
 
 static int64_t     StartTime = 0;
 static int64_t     EndTime   = 0;
@@ -20,6 +27,13 @@ static std::string Button2Url;
 // Single mutex protecting ALL RPC state including reads in updatePresence()
 static std::mutex rpcMutex;
 
+static constexpr int64_t DISCORD_RATE_LIMIT_SECONDS = 16;
+static int64_t  g_lastPushTime   = 0;
+static bool     g_pendingUpdate  = false;
+static bool     g_hasPresence    = false; // false while idle/cleared
+static std::atomic<bool> g_connected{false};
+static std::atomic<bool> g_lostConnection{false};
+
 static void discordSetup() {
 	LOG_DEBUG("Setting up Discord RPC");
 	discord::RPCManager::get()
@@ -27,9 +41,16 @@ static void discordSetup() {
 		.onReady([](discord::User const& user) {
 				LOG_INFO("Discord: connected to " << user.username
 						<< "#" << user.discriminator << " - " << user.id);
+				g_connected = true;
+				// Discord forgets our activity across restarts; re-send it
+				// on the next main-loop flush (with fresh timestamps)
+				std::lock_guard<std::mutex> lock(rpcMutex);
+				if (g_hasPresence) g_pendingUpdate = true;
 				})
 	.onDisconnected([](int errcode, std::string_view message) {
 			LOG_INFO("Discord: disconnected (" << errcode << ") - " << message);
+			g_connected = false;
+			g_lostConnection = true;
 			})
 	.onErrored([](int errcode, std::string_view message) {
 			LOG_ERR("Discord: error (" << errcode << ") - " << message);
@@ -59,12 +80,6 @@ static void updatePresenceLocked() {
 	presence.refresh();
 }
 
-static std::atomic<int> g_rpcSongID{-1};
-
-static constexpr int64_t DISCORD_RATE_LIMIT_SECONDS = 16;
-static int64_t  g_lastPushTime   = 0;
-static bool     g_pendingUpdate  = false;
-
 // Must be called with rpcMutex held.
 static bool pushPresenceOrDefer() {
 	int64_t now = static_cast<int64_t>(
@@ -91,28 +106,88 @@ void rpc_setup()      { discordSetup(); }
 void rpc_initialize() { discord::RPCManager::get().initialize(); }
 void rpc_shutdown()   { discord::RPCManager::get().shutdown(); }
 
-void rpc_set_current_song(int songID,
-		const std::string& details,
+// Mirrors discord-presence's socket search paths (platform/unix.hpp)
+static bool discordSocketExists() {
+	namespace fs = std::filesystem;
+	const char* xdg = std::getenv("XDG_RUNTIME_DIR");
+	fs::path base = xdg ? xdg : "/run/user/" + std::to_string(::getuid());
+
+	for (const char* sub : {"", "snap.discord", "app/com.discordapp.Discord",
+			"app/com.discordapp.DiscordCanary"}) {
+		for (int i = 0; i < 10; ++i) {
+			std::error_code ec;
+			if (fs::is_socket(base / sub / ("discord-ipc-" + std::to_string(i)), ec))
+				return true;
+		}
+	}
+	return false;
+}
+
+// discord-presence can't reconnect on its own: a failed connect attempt leaves
+// junk in its socket path buffer, and its backoff (which also delays reading the
+// handshake reply) grows to 60s and never resets. So once the connection drops we
+// shut the manager down, wait for Discord's socket to show up, then start a fresh
+// manager with the backoff reset.
+// Must not be called with rpcMutex held (shutdown joins the IO thread, whose
+// onReady callback takes rpcMutex).
+void rpc_reconnect_if_needed() {
+	using clock = std::chrono::steady_clock;
+	static constexpr auto POLL_INTERVAL    = std::chrono::seconds(2);
+	static constexpr auto CONNECT_TIMEOUT  = std::chrono::seconds(15);
+	static bool running = true;   // rpc_initialize() is called at startup
+	static auto since   = clock::now();
+
+	auto now = clock::now();
+	auto& rpc = discord::RPCManager::get();
+
+	if (running) {
+		if (g_connected) {
+			since = now;
+			return;
+		}
+		// Connection dropped, or a connect attempt never completed
+		if (g_lostConnection.exchange(false) || now - since >= CONNECT_TIMEOUT) {
+			LOG_DEBUG("Discord not connected, stopping RPC manager");
+			rpc.shutdown();
+			running = false;
+			since   = now;
+		}
+		return;
+	}
+
+	if (now - since < POLL_INTERVAL) return;
+	since = now;
+	if (!discordSocketExists()) return;
+
+	LOG_DEBUG("Discord socket found, starting RPC manager");
+	discord::Backoff::get().reset();
+	g_lostConnection = false;
+	rpc.initialize();
+	running = true;
+}
+
+void rpc_set_current_song(const std::string& details,
 		const std::string& state,
 		const std::string& largeImageText,
 		int64_t startTime,
 		int64_t endTime)
 {
 	std::lock_guard<std::mutex> lock(rpcMutex);
-	g_rpcSongID.store(songID);
 	currentDetails   = details;
 	currentState     = state;
 	currentImageText = largeImageText;
 	LargeImageKey    = "mpd";
 	StartTime        = startTime;
 	EndTime          = endTime;
-	LOG_DEBUG("rpc_set_current_song: id=" << songID << " details=" << details);
+	g_hasPresence    = true;
+	LOG_DEBUG("rpc_set_current_song: details=" << details);
 }
 
 void rpc_clear_presence() {
 	std::lock_guard<std::mutex> lock(rpcMutex);
 	discord::RPCManager::get().clearPresence();
 	g_pendingUpdate = false;
+	g_hasPresence   = false;
 	LOG_DEBUG("Discord presence cleared");
 }
 
@@ -134,24 +209,6 @@ void rpc_set_endtime(int64_t v) {
 	LOG_DEBUG("EndTime = " << v);
 }
 
-void rpc_set_details(const char* v) {
-	std::lock_guard<std::mutex> lock(rpcMutex);
-	currentDetails = v;
-	LOG_DEBUG("Details = " << v);
-}
-
-void rpc_set_state(const char* v) {
-	std::lock_guard<std::mutex> lock(rpcMutex);
-	currentState = v;
-	LOG_DEBUG("State = " << v);
-}
-
-void rpc_set_largeimagetext(const char* v) {
-	std::lock_guard<std::mutex> lock(rpcMutex);
-	currentImageText = v;
-	LOG_DEBUG("LargeImageText = " << v);
-}
-
 void rpc_set_largeimage(const std::string& v) {
 	std::lock_guard<std::mutex> lock(rpcMutex);
 	LargeImageKey = v;
@@ -170,49 +227,6 @@ void rpc_set_button2(const std::string& label, const std::string& url) {
 	Button2Label = label;
 	Button2Url   = url;
 	LOG_DEBUG("Button2 = " << label << " (" << url << ")");
-}
-
-std::string rpc_get_details()       { std::lock_guard<std::mutex> l(rpcMutex); return currentDetails; }
-std::string rpc_get_state()         { std::lock_guard<std::mutex> l(rpcMutex); return currentState; }
-std::string rpc_get_largeimagetext(){ std::lock_guard<std::mutex> l(rpcMutex); return currentImageText; }
-std::string rpc_get_largeimage()    { std::lock_guard<std::mutex> l(rpcMutex); return LargeImageKey; }
-
-int rpc_get_current_song_id() {
-	return g_rpcSongID.load();
-}
-
-bool rpc_apply_art_if_current(int songID,
-		const std::string& cover_url,
-		const std::string& btn1_label,
-		const std::string& btn1_url,
-		int64_t startTime,
-		int64_t endTime)
-{
-	std::lock_guard<std::mutex> lock(rpcMutex);
-
-	if (g_rpcSongID.load() != songID) {
-		LOG_DEBUG("rpc_apply_art_if_current: songID mismatch ("
-				<< songID << " vs " << g_rpcSongID.load() << "), discarding");
-		return false;
-	}
-
-	if (!cover_url.empty()) {
-		LargeImageKey = cover_url;
-		LOG_DEBUG("Applied cover art: " << cover_url);
-	} else {
-		LargeImageKey = "mpd";
-	}
-
-	if (!btn1_label.empty() && !btn1_url.empty()) {
-		Button1Label = btn1_label;
-		Button1Url   = btn1_url;
-	}
-
-	StartTime = startTime;
-	EndTime   = endTime;
-
-	pushPresenceOrDefer();
-	return true;
 }
 
 bool rpc_flush_if_pending(int64_t newStartTime, int64_t newEndTime) {
