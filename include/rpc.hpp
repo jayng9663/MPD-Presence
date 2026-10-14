@@ -25,7 +25,12 @@ void rpc_set_starttime(int64_t starttime);
 void rpc_set_endtime(int64_t endtime);
 void rpc_set_largeimage(const std::string& url);
 
+// Show the playing/paused small icon (SMALL_IMAGE_PLAYING / SMALL_IMAGE_PAUSED
+// in config; empty = no icon)
+void rpc_set_paused(bool paused);
+
 void rpc_load_button_settings();
+// Empty label or url removes the button
 void rpc_set_button1(const std::string& label, const std::string& url);
 void rpc_set_button2(const std::string& label, const std::string& url);
 
