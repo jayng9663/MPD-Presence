@@ -88,38 +88,15 @@ namespace {
 
 } // anonymous namespace
 
-// MusicBrainz search with caching
-std::vector<std::pair<std::string, double>> json_get_release_ids_search(
-		const std::string& artist,
-		const std::string& album,
-		const std::string& date,
-		double scoreThreshold)
+// -- Pure JSON parsers (no network I/O), unit tested directly --
+
+std::vector<std::pair<std::string, double>>
+parse_release_ids_search(const std::string& json, double scoreThreshold)
 {
-	std::string cache_key = "mb:" + artist + ":" + album + ":" + date;
-
-	// Check if result is cached
-	auto cached = search_cache.find(cache_key);
-	if (cached != search_cache.end()) {
-		LOG_DEBUG("Using cached MusicBrainz results for: " << cache_key);
-		return cached->second;
-	}
-
-	std::string url =
-		"https://musicbrainz.org/ws/2/release/?query=artist:%22" +
-		url_encode(artist) + "%22%20release:%22" +
-		url_encode(album) + "%22%20date:" +
-		url_encode(date) + "&fmt=json";
-
-	std::string response = get_response(url);
-	if (response.empty()) {
-		LOG_ERR("Empty response from MusicBrainz for: " << url);
-		return {};
-	}
-
 	std::vector<std::pair<std::string, double>> releaseIds;
 
 	try {
-		auto root = nlohmann::json::parse(response);
+		auto root = nlohmann::json::parse(json);
 
 		// Find the release with the highest score above the threshold
 		double bestScore = -1.0;
@@ -152,31 +129,16 @@ std::vector<std::pair<std::string, double>> json_get_release_ids_search(
 		LOG_ERR("JSON parsing error: " << e.what());
 	}
 
-	// Cache result
-	search_cache[cache_key] = releaseIds;
 	return releaseIds;
 }
 
-std::vector<std::string> json_get_release_ids_fingerprint(
-		int duration,
-		const std::string& fingerprint,
-		const std::string& acoustid_api)
+std::vector<std::string>
+parse_release_ids_fingerprint(const std::string& json)
 {
-	std::string url =
-		"https://api.acoustid.org/v2/lookup?client=" + acoustid_api +
-		"&meta=releaseids&duration=" + std::to_string(duration) +
-		"&fingerprint=" + fingerprint;
-
-	std::string response = get_response(url);
-	if (response.empty()) {
-		LOG_ERR("Empty response from AcoustID for: " << url);
-		return {};
-	}
-
 	std::vector<std::string> releaseIds;
 
 	try {
-		auto root = nlohmann::json::parse(response);
+		auto root = nlohmann::json::parse(json);
 
 		// More robust parsing
 		if (root.contains("results") && 
@@ -208,6 +170,60 @@ std::vector<std::string> json_get_release_ids_fingerprint(
 	}
 
 	return releaseIds;
+}
+
+// MusicBrainz search with caching
+std::vector<std::pair<std::string, double>> json_get_release_ids_search(
+		const std::string& artist,
+		const std::string& album,
+		const std::string& date,
+		double scoreThreshold)
+{
+	std::string cache_key = "mb:" + artist + ":" + album + ":" + date;
+
+	// Check if result is cached
+	auto cached = search_cache.find(cache_key);
+	if (cached != search_cache.end()) {
+		LOG_DEBUG("Using cached MusicBrainz results for: " << cache_key);
+		return cached->second;
+	}
+
+	std::string url =
+		"https://musicbrainz.org/ws/2/release/?query=artist:%22" +
+		url_encode(artist) + "%22%20release:%22" +
+		url_encode(album) + "%22%20date:" +
+		url_encode(date) + "&fmt=json";
+
+	std::string response = get_response(url);
+	if (response.empty()) {
+		LOG_ERR("Empty response from MusicBrainz for: " << url);
+		return {};
+	}
+
+	auto releaseIds = parse_release_ids_search(response, scoreThreshold);
+
+	// Cache result
+	search_cache[cache_key] = releaseIds;
+	return releaseIds;
+}
+
+std::vector<std::string> json_get_release_ids_fingerprint(
+		int duration,
+		const std::string& fingerprint,
+		const std::string& acoustid_api)
+{
+	std::string url =
+		"https://api.acoustid.org/v2/lookup?client=" + acoustid_api +
+		"&meta=releaseids&duration=" + std::to_string(duration) +
+		"&fingerprint=" + fingerprint;
+
+	std::string response = get_response(url);
+	if (response.empty()) {
+		LOG_ERR("Empty response from AcoustID for: " << url);
+		return {};
+	}
+
+	return parse_release_ids_fingerprint(response);
 }
 
 // Over Art Archive

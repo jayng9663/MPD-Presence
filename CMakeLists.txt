@@ -37,6 +37,7 @@ add_executable(MPD-Presence
     src/rpc.cpp
     src/mpd.cpp
     src/album_art.cpp
+    src/util.cpp
 )
 
 target_include_directories(MPD-Presence PRIVATE
@@ -77,3 +78,10 @@ install(TARGETS MPD-Presence RUNTIME DESTINATION bin)
 install(FILES MPD-Presence.conf.example
         DESTINATION share/MPD-Presence
         OPTIONAL)
+
+# ── Tests ──
+option(BUILD_TESTS "Build the unit test suite (tests/)" ON)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

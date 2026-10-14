@@ -1,0 +1,691 @@
+{
+  "created": "2026-10-14T04:02:27.937Z",
+  "count": 100,
+  "offset": 0,
+  "releases": [
+    {
+      "id": "fb267625-79d7-481a-ac6b-fcc9a10dd397",
+      "score": 100,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "I believe what you said",
+      "status": "Official",
+      "packaging": "None",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "282846fc-3fe0-480d-8e79-ff8d08b3fa36",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "I believe what you said",
+        "primary-type": "Single"
+      },
+      "date": "2020-10-14",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2020-10-14",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "4562412125253",
+      "label-info": [
+        {
+          "catalog-number": "USSW-0270",
+          "label": {
+            "id": "62883c75-4f95-4823-8309-f3913619a067",
+            "name": "MAGES."
+          }
+        }
+      ],
+      "track-count": 6,
+      "media": [
+        {
+          "id": "65a373b9-ca09-366d-a968-03dd5f292833",
+          "format": "Digital Media",
+          "disc-count": 0,
+          "track-count": 6
+        }
+      ]
+    },
+    {
+      "id": "8682a143-8583-4918-970f-a67d63a246bc",
+      "score": 100,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "I believe what you said",
+      "status": "Official",
+      "disambiguation": "アニメ盤",
+      "packaging": "Jewel Case",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "282846fc-3fe0-480d-8e79-ff8d08b3fa36",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "I believe what you said",
+        "primary-type": "Single"
+      },
+      "date": "2020-10-14",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2020-10-14",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "4562412125260",
+      "asin": "B08K8VXG3C",
+      "label-info": [
+        {
+          "catalog-number": "USSW-0271",
+          "label": {
+            "id": "62883c75-4f95-4823-8309-f3913619a067",
+            "name": "MAGES."
+          }
+        }
+      ],
+      "track-count": 6,
+      "media": [
+        {
+          "id": "bc8f0cd4-3001-38b5-ae94-35253df22bf1",
+          "format": "CD",
+          "disc-count": 1,
+          "track-count": 6
+        }
+      ]
+    },
+    {
+      "id": "6ae55a42-cbd5-470c-870d-da61c1d9590f",
+      "score": 100,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 2,
+      "title": "I believe what you said",
+      "status": "Official",
+      "disambiguation": "DVD付盤",
+      "text-representation": {
+        "language": "eng",
+        "script": "Latn"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "282846fc-3fe0-480d-8e79-ff8d08b3fa36",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "I believe what you said",
+        "primary-type": "Single"
+      },
+      "date": "2020-10-14",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2020-10-14",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "4562412125253",
+      "asin": "B08K8WY5GN",
+      "label-info": [
+        {
+          "catalog-number": "USSW-0270",
+          "label": {
+            "id": "62883c75-4f95-4823-8309-f3913619a067",
+            "name": "MAGES."
+          }
+        }
+      ],
+      "track-count": 8,
+      "media": [
+        {
+          "id": "8b2b8803-b1b6-316b-9435-ad5ff64132da",
+          "format": "CD",
+          "disc-count": 1,
+          "track-count": 6
+        },
+        {
+          "id": "d975c4e3-0785-34f9-bc7a-a09c8363f866",
+          "format": "DVD-Video",
+          "disc-count": 0,
+          "track-count": 2
+        }
+      ]
+    },
+    {
+      "id": "f270992e-efcc-4976-8679-fb8c60213316",
+      "score": 100,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "I believe what you said",
+      "status": "Official",
+      "disambiguation": "96KHz/24bit",
+      "packaging": "None",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "282846fc-3fe0-480d-8e79-ff8d08b3fa36",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "I believe what you said",
+        "primary-type": "Single"
+      },
+      "date": "2020-10-14",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2020-10-14",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "",
+      "label-info": [
+        {
+          "catalog-number": "A90710",
+          "label": {
+            "id": "62883c75-4f95-4823-8309-f3913619a067",
+            "name": "MAGES."
+          }
+        }
+      ],
+      "track-count": 3,
+      "media": [
+        {
+          "id": "32b02474-96d2-3e04-925f-98995ad35617",
+          "format": "Digital Media",
+          "disc-count": 0,
+          "track-count": 3
+        }
+      ]
+    },
+    {
+      "id": "aef80889-781b-4d63-a643-225e14c8d893",
+      "score": 52,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "artist-credit-id": "7bbc3427-13bd-3c06-8885-e85a7a8d6f08",
+      "count": 1,
+      "title": "I Believe What You Said",
+      "status": "Official",
+      "packaging": "None",
+      "text-representation": {
+        "language": "eng",
+        "script": "Latn"
+      },
+      "artist-credit": [
+        {
+          "name": "Sati Akura",
+          "artist": {
+            "id": "202d1b8d-af85-4c51-8370-f7fcb4d5e972",
+            "name": "Sati Akura",
+            "sort-name": "Sati Akura"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "0343c941-0e8e-4380-94da-013c4d548b9a",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "I Believe What You Said",
+        "primary-type": "Single"
+      },
+      "date": "2020-12-18",
+      "country": "XW",
+      "release-events": [
+        {
+          "date": "2020-12-18",
+          "area": {
+            "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+            "name": "[Worldwide]",
+            "sort-name": "[Worldwide]",
+            "iso-3166-1-codes": [
+              "XW"
+            ]
+          }
+        }
+      ],
+      "barcode": "3616849076242",
+      "asin": "B0B64DKDBG",
+      "label-info": [
+        {
+          "label": {
+            "id": "f826e9b7-8337-4a88-9f8a-48e8c602156b",
+            "name": "Booking RM"
+          }
+        }
+      ],
+      "track-count": 1,
+      "media": [
+        {
+          "id": "9e9e6f6a-7006-3c42-905f-0db309cdd983",
+          "format": "Digital Media",
+          "disc-count": 0,
+          "track-count": 1
+        }
+      ]
+    },
+    {
+      "id": "5c6bbf67-8d67-4d49-b301-e471f81c968a",
+      "score": 47,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 2,
+      "title": "Open your eyes",
+      "status": "Official",
+      "packaging": "Jewel Case",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "5f00a67e-7f39-4504-bb74-06d4eb09a39c",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "Open your eyes",
+        "primary-type": "Single"
+      },
+      "date": "2016-10-26",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2016-10-26",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "4534530097293",
+      "asin": "B01KB88746",
+      "label-info": [
+        {
+          "catalog-number": "SVWC-70208",
+          "label": {
+            "id": "27509f3d-777a-41f1-bd49-bac7bf6e6f4e",
+            "name": "5pb.Records"
+          }
+        },
+        {
+          "catalog-number": "SVWC-70209",
+          "label": {
+            "id": "27509f3d-777a-41f1-bd49-bac7bf6e6f4e",
+            "name": "5pb.Records"
+          }
+        }
+      ],
+      "track-count": 7,
+      "media": [
+        {
+          "id": "df158d59-7b20-3f77-92bf-5c2b9924ae12",
+          "format": "CD",
+          "disc-count": 1,
+          "track-count": 5
+        },
+        {
+          "id": "ce2ae80b-0933-35f0-8ada-3b1f8a17d343",
+          "format": "DVD-Video",
+          "disc-count": 0,
+          "track-count": 2
+        }
+      ]
+    },
+    {
+      "id": "ed8662d4-5955-4df6-b575-2f12e383581c",
+      "score": 47,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "Open your eyes",
+      "status": "Official",
+      "packaging": "None",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "5f00a67e-7f39-4504-bb74-06d4eb09a39c",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "Open your eyes",
+        "primary-type": "Single"
+      },
+      "date": "2016-10-26",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2016-10-26",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "4534530097309",
+      "label-info": [
+        {
+          "catalog-number": "SVWC-70210",
+          "label": {
+            "id": "27509f3d-777a-41f1-bd49-bac7bf6e6f4e",
+            "name": "5pb.Records"
+          }
+        }
+      ],
+      "track-count": 4,
+      "media": [
+        {
+          "id": "46e1c01a-ff51-3aeb-8ee7-cfac707bcea5",
+          "format": "Digital Media",
+          "disc-count": 0,
+          "track-count": 4
+        }
+      ]
+    },
+    {
+      "id": "9f1bcdd0-94da-4833-8c60-e6f7f3b06f51",
+      "score": 47,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "Open your eyes",
+      "status": "Official",
+      "disambiguation": "24bit/96kHz",
+      "packaging": "None",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "5f00a67e-7f39-4504-bb74-06d4eb09a39c",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "Open your eyes",
+        "primary-type": "Single"
+      },
+      "date": "2016-10-26",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2016-10-26",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "label-info": [
+        {
+          "catalog-number": "SVWC-70210",
+          "label": {
+            "id": "27509f3d-777a-41f1-bd49-bac7bf6e6f4e",
+            "name": "5pb.Records"
+          }
+        }
+      ],
+      "track-count": 2,
+      "media": [
+        {
+          "id": "5a53b8f2-caba-35b5-a3a8-d5916f188a0b",
+          "format": "Digital Media",
+          "disc-count": 0,
+          "track-count": 2
+        }
+      ]
+    },
+    {
+      "id": "29409628-27f0-4fbe-b66a-a1cc672eff47",
+      "score": 47,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "Eternal Star",
+      "status": "Official",
+      "disambiguation": "24bit/96kHz",
+      "packaging": "None",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "98b4e638-5fd4-41a4-9e10-817102c2d1e7",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "Eternal Star",
+        "primary-type": "Single"
+      },
+      "date": "2018-08-08",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2018-08-08",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "label-info": [
+        {
+          "label": {
+            "id": "27509f3d-777a-41f1-bd49-bac7bf6e6f4e",
+            "name": "5pb.Records"
+          }
+        }
+      ],
+      "track-count": 3,
+      "media": [
+        {
+          "id": "da397473-9f4b-30fd-8940-dd100bd0b507",
+          "format": "Digital Media",
+          "disc-count": 0,
+          "track-count": 3
+        }
+      ]
+    },
+    {
+      "id": "ce7fd084-e7a7-4b15-b5d8-17663ba111d5",
+      "score": 47,
+      "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+      "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+      "artist-credit-id": "97dc6c03-3bd9-3711-a12c-58a452b2394c",
+      "count": 1,
+      "title": "SHINY DAYS",
+      "status": "Official",
+      "disambiguation": "ゆるキャン△盤",
+      "packaging": "Jewel Case",
+      "text-representation": {
+        "language": "jpn",
+        "script": "Jpan"
+      },
+      "artist-credit": [
+        {
+          "name": "亜咲花",
+          "artist": {
+            "id": "2c690c27-b855-4d3c-9efe-a773ad9009a8",
+            "name": "亜咲花",
+            "sort-name": "Asaka"
+          }
+        }
+      ],
+      "release-group": {
+        "id": "726c78e0-d874-4655-88b6-4c215ce7fcd7",
+        "type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+        "title": "SHINY DAYS",
+        "primary-type": "Single"
+      },
+      "date": "2018-01-24",
+      "country": "JP",
+      "release-events": [
+        {
+          "date": "2018-01-24",
+          "area": {
+            "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+            "name": "Japan",
+            "sort-name": "Japan",
+            "iso-3166-1-codes": [
+              "JP"
+            ]
+          }
+        }
+      ],
+      "barcode": "4562412120401",
+      "asin": "B077P8BZJY",
+      "label-info": [
+        {
+          "catalog-number": "USSW-0070",
+          "label": {
+            "id": "27509f3d-777a-41f1-bd49-bac7bf6e6f4e",
+            "name": "5pb.Records"
+          }
+        }
+      ],
+      "track-count": 8,
+      "media": [
+        {
+          "id": "9ba8d0ef-1a4f-3921-b26f-227a0a278209",
+          "format": "CD",
+          "disc-count": 1,
+          "track-count": 8
+        }
+      ]
+    }
+  ]
+}

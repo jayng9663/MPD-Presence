@@ -11,6 +11,7 @@
 #include "mpd.hpp"
 #include "album_art.hpp"
 #include "logger.hpp"
+#include "util.hpp"
 
 std::atomic<bool> keepRunning(true);
 
@@ -45,17 +46,7 @@ int main(int argc, char* argv[]) {
 		LOG_WARN("Could not open log file: " << logFile);
 
 	// Album art method order
-	std::string methodsStr(config::ALBUM_ART_METHOD_ORDER);
-
-	{
-		std::istringstream iss(methodsStr);
-		std::string method;
-		while (std::getline(iss, method, ',')) {
-			method.erase(0, method.find_first_not_of(" \t"));
-			method.erase(method.find_last_not_of(" \t") + 1);
-			if (!method.empty()) artMethods.push_back(method);
-		}
-	}
+	artMethods = util::split_trim(std::string(config::ALBUM_ART_METHOD_ORDER), ',');
 	if (artMethods.empty()) artMethods = {"fingerprint", "search"};
 
 	// Initial MPD fetch so we have a valid state before RPC init
@@ -70,18 +61,8 @@ int main(int argc, char* argv[]) {
 	int64_t lastElapsed         = 0;
 	bool    lastWasIdle         = true;
 
-	const std::vector<std::string> ignoreList = []() {
-		std::vector<std::string> list;
-		std::istringstream iss{std::string(config::MPD_IGNORE)};
-		std::string item;
-		while (std::getline(iss, item, ',')) {
-			auto s = item.find_first_not_of(" \t");
-			auto e = item.find_last_not_of(" \t");
-			if (s != std::string::npos)
-				list.push_back(item.substr(s, e - s + 1));
-		}
-		return list;
-	}();
+	const std::vector<std::string> ignoreList =
+		util::split_trim(std::string(config::MPD_IGNORE), ',');
 	const std::string musicFolder(config::MUSIC_FOLDER);
 
 	while (keepRunning) {

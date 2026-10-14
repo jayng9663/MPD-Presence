@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build + unit tests (Debug, ASan/UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            pkg-config \
+            libmpdclient-dev \
+            libcurl4-openssl-dev \
+            nlohmann-json3-dev
+
+      - name: Create config.hpp from template
+        # include/config.hpp is git-ignored (may contain a personal MPD
+        # password); the main executable needs *some* copy to compile, so
+        # use the shipped example with its placeholder values, same as the
+        # README instructs for a local build.
+        run: cp include/config.hpp.example include/config.hpp
+
+      - name: Configure (CMake)
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTS=ON \
+            -DMPD_PRESENCE_ENABLE_LIVE_TESTS=OFF
+
+      - name: Build (main executable + test suite)
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Run unit tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Run test binary directly (verbose)
+        # Belt-and-suspenders: ctest wraps the same binary, but running it
+        # directly surfaces doctest's own summary/assertion output in logs.
+        working-directory: build
+        run: ./tests/mpd-presence-tests --success --duration
