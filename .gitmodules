@@ -1,6 +1,9 @@
 [submodule "lib/discord-presence"]
 	path = lib/discord-presence
-	url = https://github.com/EclipseMenu/discord-presence
+	# Upstream moved off GitHub to self-hosting; the old
+	# https://github.com/EclipseMenu/discord-presence URL 404s and broke
+	# `git submodule update --init --recursive` (incl. in CI).
+	url = https://git.eclipse.menu/EclipseMenu/discord-presence
 [submodule "lib/json"]
 	path = lib/json
 	url = https://github.com/nlohmann/json.git
