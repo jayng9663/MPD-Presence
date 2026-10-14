@@ -21,6 +21,13 @@ AlbumUrls get_album_urls_fingerprint(
 		const std::string& fingerprint,
 		const std::string& acoustid_api);
 
+// Uses MusicBrainz IDs from the file's tags (MUSICBRAINZ_ALBUMID /
+// MUSICBRAINZ_RELEASEGROUPID); falls back to the release group's art when the
+// release itself has none. Either ID may be empty.
+AlbumUrls get_album_urls_mbid(
+		const std::string& releaseId,
+		const std::string& releaseGroupId);
+
 // MusicBrainz search
 std::vector<std::pair<std::string, double>>
 json_get_release_ids_search(
@@ -55,5 +62,8 @@ parse_release_ids_fingerprint(const std::string& json);
 
 // Cover Art Archive / MusicBrainz URL helpers
 bool cover_art_exists(const std::string& id);
+bool image_exists(const std::string& url);
 std::string get_album_art_url(const std::string& id);
 std::string get_release_page_url(const std::string& id);
+std::string get_release_group_art_url(const std::string& id);
+std::string get_release_group_page_url(const std::string& id);
