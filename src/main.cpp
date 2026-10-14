@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
 	if (verbose) Logger::get().setLevel(LogLevel::DEBUG);
 	if (!logFile.empty() && !Logger::get().setFile(logFile.c_str()))
-		LOG_WARN("Counld not open log file: " << logFile);
+		LOG_WARN("Could not open log file: " << logFile);
 
 	// Album art method order
 	std::string methodsStr(config::ALBUM_ART_METHOD_ORDER);
@@ -148,7 +148,8 @@ int main(int argc, char* argv[]) {
 					if (method == "fingerprint") {
 						if (!fingerprint.empty()) {
 							urls = get_album_urls_fingerprint(
-									trackTotal, fingerprint, "2jFwlOUpO2");
+									trackTotal, fingerprint,
+									std::string(config::ACOUSTID_API_KEY));
 							if (!urls.cover_url.empty()) {
 								LOG_INFO("Album art: fingerprint succeeded");
 								break;
@@ -179,8 +180,7 @@ int main(int argc, char* argv[]) {
 				}
 
 				// Set all metadata + art in one go, then push once
-				rpc_set_current_song(songID,
-						title,
+				rpc_set_current_song(title,
 						date.empty() ? artist : artist + " - " + date,
 						album,
 						startTime,
@@ -223,6 +223,8 @@ int main(int argc, char* argv[]) {
 			int64_t freshEnd   = (!isIdle && !paused && total > 0) ? now + (total - elapsed) : 0;
 			rpc_flush_if_pending(freshStart, freshEnd);
 		}
+
+		rpc_reconnect_if_needed();
 
 		lastElapsed = elapsed;
 		std::this_thread::sleep_for(std::chrono::milliseconds(250));
