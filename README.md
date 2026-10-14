@@ -10,14 +10,15 @@ A Discord Rich Presence client for [MPD](https://www.musicpd.org/) (Music Player
 
 ## Features
 
-- Displays track title, artist, album, and release year in Discord
-- Album art lookup via **AcoustID fingerprint** and/or **MusicBrainz text search**
+- Displays track title, artist(s), album, and release year in Discord
+- Album art lookup via **MusicBrainz IDs in your tags**, **AcoustID fingerprint** and/or **MusicBrainz text search**
 - "View Album" button linking to the MusicBrainz release page when art is found
 - Optional second configurable Discord button
+- Optional playing / paused small icon
 - Seek, pause/resume, and idle state detection
 - Path-based ignore list to suppress presence for specific library folders
 - Discord rate-limit aware — deferred updates are flushed automatically
-- Persistent MPD connection with automatic reconnect
+- Automatic reconnect to both MPD and Discord (e.g. after either restarts)
 
 ---
 
@@ -29,7 +30,7 @@ flowchart TD
     B --> C[Connect to MPD]
     C --> D{MPD state?}
 
-    D -->|Stopped / idle| E[Show idle presence]
+    D -->|Stopped / idle| E[Clear presence]
     E --> D
 
     D -->|Playing or paused| F{Track changed?}
@@ -43,11 +44,14 @@ flowchart TD
     F -->|Yes| J[Fetch album art]
 
     J --> K{Try methods\nin config order}
+    K --> T[MusicBrainz IDs\nfrom tags]
     K --> L[AcoustID fingerprint\nlookup]
     K --> M[MusicBrainz\ntext search]
 
-    L -->|Found| N[Resolve cover art\nfrom Cover Art Archive]
+    T -->|Found| N[Resolve cover art\nfrom Cover Art Archive]
+    L -->|Found| N
     M -->|Found| N
+    T -->|Not found| L
     L -->|Not found| M
     M -->|Not found| O[Use MPD placeholder]
 
@@ -71,6 +75,21 @@ cp include/config.hpp.example include/config.hpp
 `include/config.hpp` is git-ignored, so your personal settings — including your
 MPD password — are never committed. Edit it, then rebuild the project for changes
 to take effect.
+
+### Album art methods
+
+`ALBUM_ART_METHOD_ORDER` is a comma-separated list of methods, tried in order until one finds art:
+
+| Method | Uses | Notes |
+|---|---|---|
+| `tag` | `MUSICBRAINZ_ALBUMID` / `MUSICBRAINZ_RELEASEGROUPID` tags | Exact and instant for libraries tagged with [Picard](https://picard.musicbrainz.org/). Release-group IDs need libmpdclient ≥ 2.22. |
+| `fingerprint` | AcoustID lookup of the audio fingerprint | MPD decodes the file to compute it, so it only runs when this method is reached. |
+| `search` | MusicBrainz search on artist + album + date | Needs all three tags. |
+
+### Playing / paused icon
+
+Set `SMALL_IMAGE_PLAYING` and `SMALL_IMAGE_PAUSED` to show a small icon on the album art. Each value is either the key of an
+asset uploaded to your Discord application (Developer Portal → Rich Presence → Art Assets) or an image URL. Leave them empty for no icon.
 
 ### AcoustID API Key
 
@@ -118,13 +137,14 @@ The process runs in the foreground. Stop it with `Ctrl+C` or `SIGTERM`.
 
 ## Album Art Resolution
 
-When a track changes, the following sequence runs **synchronously** before the presence update is pushed:
+When a track changes, the methods in `ALBUM_ART_METHOD_ORDER` run **synchronously**, in order, before the presence update is pushed:
 
-1. If `fingerprint` is listed first and a Chromaprint fingerprint is available, query **AcoustID** for matching release IDs.
-2. For each release ID, check **Cover Art Archive** for a front image (`/front-500`).
-3. If no match is found (or `fingerprint` is not in the method list), fall back to a **MusicBrainz text search** using artist + album + date with a score threshold of 100.
-4. If nothing resolves, the default `mpd` placeholder image is used.
+- **`tag`**: take the release ID from the file's tags and check **Cover Art Archive** for a front image (`/front-500`). If that release has no art, use the release group's art instead.
+- **`fingerprint`**: query **AcoustID** with the Chromaprint fingerprint, then check Cover Art Archive for each matching release.
+- **`search`**: run a **MusicBrainz text search** on the first artist + album + date (score threshold 100), then check Cover Art Archive for the best match.
 
-When art is found, the first button slot is automatically set to **"View Album"** linking to the corresponding MusicBrainz release page, regardless of what `BUTTON1LABEL`/`BUTTON1URL` are set to.
+The first method that finds art wins. If none does, the default `mpd` placeholder image is used.
 
-All HTTP responses and cover-art existence checks are cached in memory for the lifetime of the process, so repeated lookups for the same track are free.
+If `BUTTON1LABEL`/`BUTTON1URL` are set, the first button becomes **"View Album"** (linking to the MusicBrainz release page) for tracks where art was found, and shows your configured button for all other tracks.
+
+MusicBrainz search results and Cover Art Archive checks are cached in memory for the lifetime of the process, so repeated lookups for the same album are free. Network errors are not cached, so a failed check is retried on the next track from that album.
