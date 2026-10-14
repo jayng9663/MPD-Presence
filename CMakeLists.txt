@@ -75,9 +75,6 @@ target_link_options(MPD-Presence PRIVATE
 
 # ── Install ──
 install(TARGETS MPD-Presence RUNTIME DESTINATION bin)
-install(FILES MPD-Presence.conf.example
-        DESTINATION share/MPD-Presence
-        OPTIONAL)
 
 # ── Tests ──
 option(BUILD_TESTS "Build the unit test suite (tests/)" ON)
