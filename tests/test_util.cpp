@@ -50,3 +50,17 @@ TEST_CASE("split_trim: real-world ignore-list with leading slash paths") {
 	CHECK(out[0] == "/ASMR");
 	CHECK(out[1] == "/Podcasts/News");
 }
+
+TEST_CASE("join: empty, single and multiple items") {
+	CHECK(util::join({}, ", ") == "");
+	CHECK(util::join({"a"}, ", ") == "a");
+	CHECK(util::join({"a", "b", "c"}, ", ") == "a, b, c");
+}
+
+TEST_CASE("year_from_date: full date, year only, and non-date input") {
+	CHECK(util::year_from_date("2008-08-14") == "2008");
+	CHECK(util::year_from_date("2008") == "2008");
+	CHECK(util::year_from_date("") == "");
+	CHECK(util::year_from_date("08") == "08");
+	CHECK(util::year_from_date("Unknown") == "Unknown");
+}
