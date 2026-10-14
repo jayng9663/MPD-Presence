@@ -12,6 +12,11 @@
 
 namespace {
 
+	// MusicBrainz / AcoustID require a descriptive User-Agent with contact info,
+	// or they may rate-limit or reject requests.
+	constexpr const char* USER_AGENT =
+		"MPD-Presence/1.0 (https://github.com/jayng9663/MPD-Presence)";
+
 	size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* out)
 	{
 		size_t totalSize = size * nmemb;
@@ -54,7 +59,7 @@ namespace {
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPD-Presence");
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
 		LOG_DEBUG("Making request to: " << url);
@@ -230,7 +235,7 @@ bool cover_art_exists(const std::string& id)
 	curl_easy_setopt(curl, CURLOPT_URL, art_url.c_str());
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl, CURLOPT_USERAGENT, "MPD-Presence");
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
 
 	CURLcode res = curl_easy_perform(curl);
 	long code = 0;
