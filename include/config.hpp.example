@@ -37,9 +37,19 @@ namespace config {
 	 *  Get your own at https://acoustid.org/login **/
 	inline constexpr std::string_view ACOUSTID_API_KEY = "2jFwlOUpO2";
 
-	/** Album art method order (comma-separated) **/
-	inline constexpr std::string_view ALBUM_ART_METHOD_ORDER = "fingerprint";
-	// inline constexpr std::string_view ALBUM_ART_METHOD_ORDER = "fingerprint,search";
+	/** Album art method order (comma-separated), tried until one finds art:
+	 *    tag         - MusicBrainz release/release-group ID from the file's tags
+	 *                  (e.g. tagged with Picard); no lookup needed
+	 *    fingerprint - AcoustID lookup of the audio fingerprint
+	 *    search      - MusicBrainz text search on artist + album + date **/
+	inline constexpr std::string_view ALBUM_ART_METHOD_ORDER = "tag,fingerprint";
+	// inline constexpr std::string_view ALBUM_ART_METHOD_ORDER = "tag,fingerprint,search";
+
+	/** Small icon shown on the album art while playing / paused.
+	 *  Either an asset key uploaded to your Discord application, or an image URL.
+	 *  Leave empty for no icon. **/
+	inline constexpr std::string_view SMALL_IMAGE_PLAYING = "";
+	inline constexpr std::string_view SMALL_IMAGE_PAUSED  = "";
 
 	/** Button 1 **/
 	inline constexpr std::string_view BUTTON1LABEL = "";
