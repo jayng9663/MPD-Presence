@@ -74,7 +74,7 @@ to take effect.
 
 ### AcoustID API Key
 
-The AcoustID client key used for fingerprint lookups is hardcoded in `src/main.cpp`. Replace the string `"2jFwlOUpO2"` with your own key from [acoustid.org/login](https://acoustid.org/login) if needed.
+The AcoustID client key used for fingerprint lookups is set via `ACOUSTID_API_KEY` in `include/config.hpp`. Replace the default with your own key from [acoustid.org/login](https://acoustid.org/login) if needed.
 
 ---
 
