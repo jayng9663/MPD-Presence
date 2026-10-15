@@ -26,40 +26,44 @@ A Discord Rich Presence client for [MPD](https://www.musicpd.org/) (Music Player
 
 ```mermaid
 flowchart TD
-    A([Start]) --> B[Load config]
-    B --> C[Connect to MPD]
-    C --> D{MPD state?}
+    start([Start]) --> poll[Poll MPD every 250 ms]
+    poll --> show{Track to show?}
 
-    D -->|Stopped / idle| E[Clear presence]
-    E --> D
+    show -->|No: stopped, untagged or ignored| clear[Clear presence if shown]
 
-    D -->|Playing or paused| F{Track changed?}
+    show -->|Yes| change{What changed?}
+    change -->|New track| art[[Find album art]]
+    art --> build[Set song info, cover and buttons]
+    build --> push[Send to Discord, or hold it for up to 16s]
+    change -->|Paused, resumed or seeked| ts[Update timestamps and icon]
+    ts --> push
+    change -->|Nothing| flush[Send held update after 16s]
 
-    F -->|No| G{Paused or seeked?}
-    G -->|Yes| H[Update timestamps]
-    G -->|No| I[Flush pending update\nif rate limit passed]
-    H --> D
-    I --> D
+    clear --> reconnect[Reconnect to Discord if needed]
+    push --> reconnect
+    flush --> reconnect
+    reconnect --> poll
 
-    F -->|Yes| J[Fetch album art]
+    classDef discord fill:#5865F2,stroke:#4752C4,color:#fff
+    class clear,push,flush,reconnect discord
+```
 
-    J --> K{Try methods\nin config order}
-    K --> T[MusicBrainz IDs\nfrom tags]
-    K --> L[AcoustID fingerprint\nlookup]
-    K --> M[MusicBrainz\ntext search]
+Blue steps talk to Discord. Presence updates go out at most once every 16 seconds to stay within Discord's rate limit, so a change that comes sooner is held until then. A track counts as untagged when it has no title or artist tag, and as ignored when its path is in `MPD_IGNORE`.
 
-    T -->|Found| N[Resolve cover art\nfrom Cover Art Archive]
-    L -->|Found| N
-    M -->|Found| N
-    T -->|Not found| L
-    L -->|Not found| M
-    M -->|Not found| O[Use MPD placeholder]
+**Find album art** tries each method in `ALBUM_ART_METHOD_ORDER` until one finds a cover:
 
-    N --> P[Set cover URL\n+ release page button]
-    O --> P
-
-    P --> Q[Push single\nDiscord presence update]
-    Q --> D
+```mermaid
+flowchart TD
+    start([New track]) -->|ALBUM_ART_METHOD_ORDER| next{Next method?}
+    next -->|tag| tag[Release ID from file tags]
+    next -->|fingerprint| fp[AcoustID fingerprint lookup]
+    next -->|search| search[MusicBrainz search on artist, album, date]
+    next -->|None left| none([Use the mpd placeholder])
+    tag --> caa{Front cover on Cover Art Archive?}
+    fp --> caa
+    search --> caa
+    caa -->|No| next
+    caa -->|Yes| found([Use the cover and link the release page])
 ```
 
 ---
