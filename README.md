@@ -26,45 +26,47 @@ A Discord Rich Presence client for [MPD](https://www.musicpd.org/) (Music Player
 
 ```mermaid
 flowchart TD
-    start([Start]) --> poll[Poll MPD every 250 ms]
-    poll --> show{Track to show?}
+    start([Start]) --> poll
 
-    show -->|No: stopped, untagged or ignored| clear[Clear presence if shown]
+    poll[Poll MPD every 250 ms<br>reconnecting if it is down] --> show{Anything to show?}
+
+    show -->|"No: stopped, untagged<br>or in MPD_IGNORE"| wasIdle{Just went idle?}
+    wasIdle -->|Yes| clear[Clear presence]
+    wasIdle -->|No| reconnect
+    clear --> reconnect
 
     show -->|Yes| change{What changed?}
-    change -->|New track| art[[Find album art]]
-    art --> build[Set song info, cover and buttons]
-    build --> push[Send to Discord, or hold it for up to 16s]
-    change -->|Paused, resumed or seeked| ts[Update timestamps and icon]
-    ts --> push
-    change -->|Nothing| flush[Send held update after 16s]
 
-    clear --> reconnect[Reconnect to Discord if needed]
+    change -->|New track| lookup
+    subgraph lookup [Album art lookup, in ALBUM_ART_METHOD_ORDER]
+        next{Next method?} -->|tag| tag[Release ID<br>from file tags]
+        next -->|fingerprint| fp[AcoustID lookup of<br>audio fingerprint]
+        next -->|search| search[MusicBrainz search on<br>artist + album + date]
+        tag --> caa{Front cover on<br>Cover Art Archive?}
+        fp --> caa
+        search --> caa
+        caa -->|No| next
+    end
+    caa -->|Yes| cover[Cover art +<br>View Album button]
+    next -->|None left| placeholder[mpd placeholder +<br>configured button]
+    cover --> build[Set title, artist, year,<br>album, timestamps, icon]
+    placeholder --> build
+    build --> push
+
+    change -->|Paused, resumed<br>or seeked| ts[Update timestamps<br>and playback icon]
+    ts --> push[Push to Discord, or defer it<br>if the last push was under 16 s ago]
+
+    change -->|Nothing| flush[Push the deferred update<br>once 16 s have passed]
+
     push --> reconnect
     flush --> reconnect
-    reconnect --> poll
+    reconnect[Reconnect to Discord<br>if needed] --> poll
 
     classDef discord fill:#5865F2,stroke:#4752C4,color:#fff
     class clear,push,flush,reconnect discord
 ```
 
-Blue steps talk to Discord. Presence updates go out at most once every 16 seconds to stay within Discord's rate limit, so a change that comes sooner is held until then. A track counts as untagged when it has no title or artist tag, and as ignored when its path is in `MPD_IGNORE`.
-
-**Find album art** tries each method in `ALBUM_ART_METHOD_ORDER` until one finds a cover:
-
-```mermaid
-flowchart TD
-    start([New track]) -->|ALBUM_ART_METHOD_ORDER| next{Next method?}
-    next -->|tag| tag[Release ID from file tags]
-    next -->|fingerprint| fp[AcoustID fingerprint lookup]
-    next -->|search| search[MusicBrainz search on artist, album, date]
-    next -->|None left| none([Use the mpd placeholder])
-    tag --> caa{Front cover on Cover Art Archive?}
-    fp --> caa
-    search --> caa
-    caa -->|No| next
-    caa -->|Yes| found([Use the cover and link the release page])
-```
+Blue steps talk to Discord. Presence updates are sent at most once every 16 s to stay within Discord's rate limit; a change that comes sooner is held and sent once that window has passed.
 
 ---
 
