@@ -19,6 +19,7 @@ A Discord Rich Presence client for [MPD](https://www.musicpd.org/) (Music Player
 - Path-based ignore list to suppress presence for specific library folders
 - Discord rate-limit aware — deferred updates are flushed automatically
 - Automatic reconnect to both MPD and Discord (e.g. after either restarts)
+- Built-in Discord IPC client, no Discord library needed; finds regular, Flatpak, Snap and Vesktop installs
 
 ---
 
@@ -66,7 +67,7 @@ flowchart TD
     class clear,push,flush,reconnect discord
 ```
 
-Blue steps talk to Discord. Presence updates are sent at most once every 16 s to stay within Discord's rate limit; a change that comes sooner is held and sent once that window has passed.
+Blue steps talk to Discord, through the small IPC client in `src/discord_ipc.cpp` that speaks Discord's local Rich Presence protocol over its Unix socket. Presence updates are sent at most once every 16 s to stay within Discord's rate limit; a change that comes sooner is held and sent once that window has passed.
 
 ---
 
@@ -108,7 +109,6 @@ The AcoustID client key used for fingerprint lookups is set via `ACOUSTID_API_KE
 | Library | Purpose |
 |---|---|
 | [libmpdclient](https://www.musicpd.org/libs/libmpdclient/) | MPD communication + Chromaprint fingerprinting |
-| [discord-presence](https://github.com/EclipseMenu/discord-presence) | Discord Rich Presence (Modern C++ rewrite) |
 | [libcurl](https://curl.se/libcurl/) | HTTP requests (MusicBrainz, AcoustID, Cover Art Archive) |
 | [nlohmann/json](https://github.com/nlohmann/json) | JSON parsing |
 | [cpp-logger](https://github.com/jayng9663/cpp-logger) | CPP Logger |

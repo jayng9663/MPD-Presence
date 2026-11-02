@@ -27,14 +27,11 @@ if(NOT nlohmann_json_FOUND)
     pkg_check_modules(NLOHMANN_JSON nlohmann_json)
 endif()
 
-# discord-presence — let the subproject fetch its own deps (fmt, glaze) via CPM
-set(DISCORD_RPC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-add_subdirectory(lib/discord-presence)
-
 # ── Main executable ──
 add_executable(MPD-Presence
     src/main.cpp
     src/rpc.cpp
+    src/discord_ipc.cpp
     src/mpd.cpp
     src/album_art.cpp
     src/util.cpp
@@ -47,7 +44,6 @@ target_include_directories(MPD-Presence PRIVATE
 )
 
 target_link_libraries(MPD-Presence PRIVATE
-    discord-rpc
     CURL::libcurl
     ${MPDCLIENT_LIBRARIES}
 )

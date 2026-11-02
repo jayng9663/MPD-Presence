@@ -222,7 +222,7 @@ int main(int argc, char* argv[]) {
 			rpc_flush_if_pending(freshStart, freshEnd);
 		}
 
-		rpc_reconnect_if_needed();
+		rpc_poll();
 
 		lastElapsed  = elapsed;
 		lastPaused   = paused;

@@ -7,9 +7,9 @@ void rpc_setup();
 void rpc_initialize();
 void rpc_shutdown();
 
-// Restart the RPC connection if Discord has been disconnected for a while.
-// Call periodically from the main loop.
-void rpc_reconnect_if_needed();
+// Drive the Discord IPC connection: connect/reconnect, handshake, read replies.
+// Call every main-loop iteration.
+void rpc_poll();
 
 // Update presence manually
 void rpc_update_presence();

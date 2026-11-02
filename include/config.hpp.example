@@ -12,11 +12,11 @@
  */
 namespace config {
 
-	/** Discord application ID. **/
+	/** Discord application ID (Developer Portal → your app → General Information). **/
 	inline constexpr std::string_view DISCORD_APP_ID = "1343479020918014013";
 
 	/** Activity type **/
-	inline constexpr int DISCORD_ACTIVITY_TYPE = 2; // 0=Game, 1=Streaming, 2=Listening, 3=Watching
+	inline constexpr int DISCORD_ACTIVITY_TYPE = 2; // 0=Playing, 1=Streaming, 2=Listening, 3=Watching, 5=Competing
 
 	/** MPD Host **/
 	inline constexpr std::string_view MPD_HOST = "localhost";

@@ -18,7 +18,9 @@ add_executable(mpd-presence-tests
     test_album_art_urls.cpp
     test_album_art_parsing.cpp
     test_live_fixtures.cpp
+    test_discord_ipc.cpp
     ${CMAKE_SOURCE_DIR}/src/util.cpp
+    ${CMAKE_SOURCE_DIR}/src/discord_ipc.cpp
     ${CMAKE_SOURCE_DIR}/src/album_art.cpp
 )
 
@@ -29,7 +31,8 @@ target_include_directories(mpd-presence-tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/fixtures
 )
 
-target_link_libraries(mpd-presence-tests PRIVATE CURL::libcurl)
+find_package(Threads REQUIRED)
+target_link_libraries(mpd-presence-tests PRIVATE CURL::libcurl Threads::Threads)
 
 if(nlohmann_json_FOUND)
     target_link_libraries(mpd-presence-tests PRIVATE nlohmann_json::nlohmann_json)
